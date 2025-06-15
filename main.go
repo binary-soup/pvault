@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	cmdcopy "passwords/cmd/copy"
+	cmdlist "passwords/cmd/list"
 	cmdlock "passwords/cmd/lock"
 	cmdunlock "passwords/cmd/unlock"
 
@@ -20,6 +21,7 @@ func main() {
 		cmdlock.NewLockCommand(),
 		cmdunlock.NewUnlockCommand(),
 		cmdcopy.NewCopyCommand(),
+		cmdlist.NewListCommand(),
 	)
 
 	if *ls || len(os.Args) < 2 {
