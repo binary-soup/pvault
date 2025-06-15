@@ -40,7 +40,7 @@ func DecryptPasswordFromFile(path string) (*Password, error) {
 }
 
 func (password Password) SaveToFile(path string) error {
-	return saveJSON("password", &password, path)
+	return util.SaveJSON("password", &password, path)
 }
 
 func (password Password) EncryptToFile(path string) error {
@@ -57,24 +57,6 @@ func (password Password) EncryptToFile(path string) error {
 	err = os.WriteFile(path, ciphertext, 0600)
 	if err != nil {
 		return util.ChainError(err, "error saving crypt file")
-	}
-
-	return nil
-}
-
-func saveJSON[T any](name string, data *T, path string) error {
-	file, err := os.Create(path)
-	if err != nil {
-		return util.ChainErrorF(err, "error creating %s file", name)
-	}
-	defer file.Close()
-
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-
-	err = encoder.Encode(data)
-	if err != nil {
-		return util.ChainErrorF(err, "error encoding %s JSON", name)
 	}
 
 	return nil
