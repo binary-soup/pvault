@@ -1,8 +1,8 @@
 package cmdunlock
 
 import (
+	"os"
 	"passwords/data"
-	"strings"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
@@ -26,19 +26,24 @@ func (cmd UnlockCommand) Run(args []string) error {
 	if *path == "" {
 		return util.Error("path must not be empty")
 	}
+	input := *path + ".crypt"
 
-	password, err := data.DecryptPasswordFromFile(*path)
+	password, err := data.DecryptPasswordFromFile(input)
 	if err != nil {
 		return err
 	}
 
-	output, _ := strings.CutSuffix(*path, ".crypt")
-
-	err = password.SaveToFile(output)
+	err = password.SaveToFile(*path)
 	if err != nil {
 		return err
 	}
+	style.Create.PrintF("+ %s\n", *path)
 
-	style.Create.PrintF("+ %s\n", output)
+	err = os.Remove(input)
+	if err != nil {
+		return util.ChainError(err, "error deleting crypt file")
+	}
+	style.Delete.PrintF("- %s\n", input)
+
 	return nil
 }
