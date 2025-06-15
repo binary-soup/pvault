@@ -22,6 +22,7 @@ func NewCopyCommand() CopyCommand {
 func (cmd CopyCommand) Run(args []string) error {
 	name := cmd.Flags.String("name", "", "name of the vault item")
 	u := cmd.Flags.Bool("u", false, "copy username")
+	url := cmd.Flags.Bool("url", false, "copy url")
 	p := cmd.Flags.Bool("p", true, "copy password")
 	cmd.Flags.Parse(args)
 
@@ -44,6 +45,9 @@ func (cmd CopyCommand) Run(args []string) error {
 	if *u {
 		field = "username"
 		err = cmd.copyToClipboard(password.Username)
+	} else if *url {
+		field = "URL"
+		err = cmd.copyToClipboard(password.URL)
 	} else if *p {
 		field = "password"
 		err = cmd.copyToClipboard(password.Password)

@@ -21,7 +21,7 @@ func NewLockCommand() LockCommand {
 }
 
 func (cmd LockCommand) Run(args []string) error {
-	path := cmd.Flags.String("path", "", "path to the password file")
+	name := cmd.Flags.String("name", "", "name of the password file")
 	cmd.Flags.Parse(args)
 
 	cfg, err := data.LoadConfig()
@@ -29,26 +29,27 @@ func (cmd LockCommand) Run(args []string) error {
 		return err
 	}
 
-	if *path == "" {
-		return util.Error("path must not be empty")
+	if *name == "" {
+		return util.Error("name must not be empty")
 	}
+	filename := *name + ".json"
 
-	password, err := data.LoadPasswordFile(*path)
+	password, err := data.LoadPasswordFile(filename)
 	if err != nil {
 		return err
 	}
 
-	err = cfg.Vault.SavePassword(password, filepath.Base(*path))
+	err = cfg.Vault.SavePassword(password, filepath.Base(filename))
 	if err != nil {
 		return err
 	}
 
-	err = os.Remove(*path)
+	err = os.Remove(filename)
 	if err != nil {
 		return util.ChainError(err, "error deleting password file")
 	}
 
-	style.New(style.Yellow).Print(*path)
+	style.New(style.Yellow).Print(filename)
 	style.BoldInfo.Println(" -> Saved to Vault.")
 
 	return nil

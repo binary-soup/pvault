@@ -2,7 +2,6 @@ package cmdunlock
 
 import (
 	"passwords/data"
-	"path/filepath"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
@@ -20,7 +19,7 @@ func NewUnlockCommand() UnlockCommand {
 }
 
 func (cmd UnlockCommand) Run(args []string) error {
-	path := cmd.Flags.String("path", "", "path to the output file. The name of the file should match the name in the vault")
+	name := cmd.Flags.String("name", "", "name of the vault item")
 	cmd.Flags.Parse(args)
 
 	cfg, err := data.LoadConfig()
@@ -28,28 +27,28 @@ func (cmd UnlockCommand) Run(args []string) error {
 		return err
 	}
 
-	if *path == "" {
-		return util.Error("path must not be empty")
+	if *name == "" {
+		return util.Error("name must not be empty")
 	}
-	filename := filepath.Base(*path)
+	filename := *name + ".json"
 
 	password, err := cfg.Vault.LoadPassword(filename)
 	if err != nil {
 		return err
 	}
 
-	err = password.SaveToFile(*path)
+	err = password.SaveToFile(filename)
 	if err != nil {
 		return err
 	}
 
-	err = cfg.Vault.DeleteCrypt(filename)
+	err = cfg.Vault.Delete(filename)
 	if err != nil {
 		return err
 	}
 
 	style.BoldInfo.Print("Loaded from Vault -> ")
-	style.New(style.Yellow).Println(*path)
+	style.New(style.Yellow).Println(filename)
 
 	return nil
 }

@@ -10,7 +10,8 @@ import (
 type Password struct {
 	Username      string   `json:"username"`
 	Password      string   `json:"password"`
-	RecoveryCodes []string `json:"recovery_codes"`
+	URL           string   `json:"url,omitempty"`
+	RecoveryCodes []string `json:"recovery_codes,omitempty"`
 }
 
 func LoadPasswordFile(path string) (*Password, error) {
