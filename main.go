@@ -4,9 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	cmdlock "passwords/cmd/lock"
+	cmdunlock "passwords/cmd/unlock"
 
 	"github.com/binary-soup/go-command/command"
-	"github.com/binary-soup/go-command/command/sample"
 	"github.com/binary-soup/go-command/style"
 )
 
@@ -14,7 +15,10 @@ func main() {
 	ls := flag.Bool("ls", false, "list all commands")
 	flag.Parse()
 
-	runner := command.NewRunner(sample.NewHelloCommand())
+	runner := command.NewRunner(
+		cmdlock.NewLockCommand(),
+		cmdunlock.NewUnlockCommand(),
+	)
 
 	if *ls || len(os.Args) < 2 {
 		runner.ListCommands()
