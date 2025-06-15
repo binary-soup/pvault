@@ -38,12 +38,7 @@ func (cmd LockCommand) Run(args []string) error {
 		return err
 	}
 
-	bytes, err := password.Encrypt()
-	if err != nil {
-		return err
-	}
-
-	err = cfg.Vault.SaveCrypt(bytes, filepath.Base(*path))
+	err = cfg.Vault.SavePassword(password, filepath.Base(*path))
 	if err != nil {
 		return err
 	}

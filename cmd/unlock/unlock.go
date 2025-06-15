@@ -29,16 +29,11 @@ func (cmd UnlockCommand) Run(args []string) error {
 	}
 
 	if *path == "" {
-		return util.Error("name must not be empty")
+		return util.Error("path must not be empty")
 	}
 	filename := filepath.Base(*path)
 
-	bytes, err := cfg.Vault.LoadCrypt(filename)
-	if err != nil {
-		return err
-	}
-
-	password, err := data.DecryptPassword(bytes)
+	password, err := cfg.Vault.LoadPassword(filename)
 	if err != nil {
 		return err
 	}

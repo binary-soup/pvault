@@ -15,17 +15,27 @@ func (v Vault) getFilepath(filename string) string {
 	return filepath.Join(v.Path, filename) + ".crypt"
 }
 
-func (v Vault) LoadCrypt(filename string) ([]byte, error) {
+func (v Vault) LoadPassword(filename string) (*Password, error) {
 	bytes, err := os.ReadFile(v.getFilepath(filename))
 	if err != nil {
 		return nil, util.ChainError(err, "error reading crypt file from vault")
 	}
 
-	return bytes, nil
+	password, err := DecryptPassword(bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return password, nil
 }
 
-func (v Vault) SaveCrypt(bytes []byte, filename string) error {
-	err := os.WriteFile(v.getFilepath(filename), bytes, 0600)
+func (v Vault) SavePassword(password *Password, filename string) error {
+	bytes, err := password.Encrypt()
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(v.getFilepath(filename), bytes, 0600)
 	if err != nil {
 		return util.ChainError(err, "error saving crypt file to vault")
 	}

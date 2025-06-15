@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	cmdcopy "passwords/cmd/copy"
 	cmdlock "passwords/cmd/lock"
 	cmdunlock "passwords/cmd/unlock"
 
@@ -18,6 +19,7 @@ func main() {
 	runner := command.NewRunner(
 		cmdlock.NewLockCommand(),
 		cmdunlock.NewUnlockCommand(),
+		cmdcopy.NewCopyCommand(),
 	)
 
 	if *ls || len(os.Args) < 2 {
