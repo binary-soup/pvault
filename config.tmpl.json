@@ -1,0 +1,5 @@
+{
+    "vault": {
+        "path": "path to the vault directory"
+    }
+}

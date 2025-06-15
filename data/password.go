@@ -2,7 +2,6 @@ package data
 
 import (
 	"encoding/json"
-	"os"
 	"passwords/crypt"
 
 	"github.com/binary-soup/go-command/util"
@@ -18,13 +17,8 @@ func LoadPasswordFile(path string) (*Password, error) {
 	return util.LoadJSON[Password]("password", path)
 }
 
-func DecryptPasswordFromFile(path string) (*Password, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, util.ChainError(err, "error reading crypt file")
-	}
-
-	plaintext, err := crypt.Decrypt(data)
+func DecryptPassword(bytes []byte) (*Password, error) {
+	plaintext, err := crypt.Decrypt(bytes)
 	if err != nil {
 		return nil, util.ChainError(err, "error decrypting password")
 	}
@@ -43,21 +37,16 @@ func (password Password) SaveToFile(path string) error {
 	return util.SaveJSON("password", &password, path)
 }
 
-func (password Password) EncryptToFile(path string) error {
+func (password Password) Encrypt() ([]byte, error) {
 	plaintext, err := json.Marshal(password)
 	if err != nil {
-		return util.ChainError(err, "error marshaling password JSON")
+		return nil, util.ChainError(err, "error marshaling password JSON")
 	}
 
 	ciphertext, err := crypt.Encrypt(plaintext)
 	if err != nil {
-		return util.ChainError(err, "error encrypting password")
+		return nil, util.ChainError(err, "error encrypting password")
 	}
 
-	err = os.WriteFile(path, ciphertext, 0600)
-	if err != nil {
-		return util.ChainError(err, "error saving crypt file")
-	}
-
-	return nil
+	return ciphertext, nil
 }

@@ -1,8 +1,8 @@
 package cmdunlock
 
 import (
-	"os"
 	"passwords/data"
+	"path/filepath"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
@@ -20,15 +20,25 @@ func NewUnlockCommand() UnlockCommand {
 }
 
 func (cmd UnlockCommand) Run(args []string) error {
-	path := cmd.Flags.String("path", "", "path to the crypt file")
+	path := cmd.Flags.String("path", "", "path to the output file. The name of the file should match the name in the vault")
 	cmd.Flags.Parse(args)
 
-	if *path == "" {
-		return util.Error("path must not be empty")
+	cfg, err := data.LoadConfig()
+	if err != nil {
+		return err
 	}
-	input := *path + ".crypt"
 
-	password, err := data.DecryptPasswordFromFile(input)
+	if *path == "" {
+		return util.Error("name must not be empty")
+	}
+	filename := filepath.Base(*path)
+
+	bytes, err := cfg.Vault.LoadCrypt(filename)
+	if err != nil {
+		return err
+	}
+
+	password, err := data.DecryptPassword(bytes)
 	if err != nil {
 		return err
 	}
@@ -37,13 +47,14 @@ func (cmd UnlockCommand) Run(args []string) error {
 	if err != nil {
 		return err
 	}
-	style.Create.PrintF("+ %s\n", *path)
 
-	err = os.Remove(input)
+	err = cfg.Vault.DeleteCrypt(filename)
 	if err != nil {
-		return util.ChainError(err, "error deleting crypt file")
+		return err
 	}
-	style.Delete.PrintF("- %s\n", input)
+
+	style.BoldInfo.Print("Loaded from Vault -> ")
+	style.New(style.Yellow).Println(*path)
 
 	return nil
 }

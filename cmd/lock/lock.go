@@ -3,6 +3,7 @@ package cmdlock
 import (
 	"os"
 	"passwords/data"
+	"path/filepath"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
@@ -23,27 +24,37 @@ func (cmd LockCommand) Run(args []string) error {
 	path := cmd.Flags.String("path", "", "path to the password file")
 	cmd.Flags.Parse(args)
 
+	cfg, err := data.LoadConfig()
+	if err != nil {
+		return err
+	}
+
 	if *path == "" {
 		return util.Error("path must not be empty")
 	}
-	output := *path + ".crypt"
 
 	password, err := data.LoadPasswordFile(*path)
 	if err != nil {
 		return err
 	}
 
-	err = password.EncryptToFile(output)
+	bytes, err := password.Encrypt()
 	if err != nil {
 		return err
 	}
-	style.Create.PrintF("+ %s\n", output)
+
+	err = cfg.Vault.SaveCrypt(bytes, filepath.Base(*path))
+	if err != nil {
+		return err
+	}
 
 	err = os.Remove(*path)
 	if err != nil {
 		return util.ChainError(err, "error deleting password file")
 	}
-	style.Delete.PrintF("- %s\n", *path)
+
+	style.New(style.Yellow).Print(*path)
+	style.BoldInfo.Println(" -> Saved to Vault.")
 
 	return nil
 }
