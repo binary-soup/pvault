@@ -22,6 +22,7 @@ func NewLockCommand() LockCommand {
 
 func (cmd LockCommand) Run(args []string) error {
 	name := cmd.Flags.String("name", "", "name of the password file")
+	keep := cmd.Flags.Bool("keep", false, "keep the original password file")
 	cmd.Flags.Parse(args)
 
 	cfg, err := data.LoadConfig()
@@ -44,9 +45,11 @@ func (cmd LockCommand) Run(args []string) error {
 		return err
 	}
 
-	err = os.Remove(filename)
-	if err != nil {
-		return util.ChainError(err, "error deleting password file")
+	if !*keep {
+		err = os.Remove(filename)
+		if err != nil {
+			return util.ChainError(err, "error deleting password file")
+		}
 	}
 
 	style.New(style.Yellow).Print(filename)
