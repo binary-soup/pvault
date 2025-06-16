@@ -2,6 +2,7 @@ package cmdunlock
 
 import (
 	"passwords/data"
+	"passwords/tools"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
@@ -32,7 +33,12 @@ func (cmd UnlockCommand) Run(args []string) error {
 	}
 	filename := *name + ".json"
 
-	password, err := cfg.Vault.LoadPassword(filename)
+	passkey, err := tools.ReadPasskey()
+	if err != nil {
+		return err
+	}
+
+	password, err := cfg.Vault.LoadPassword(passkey, filename)
 	if err != nil {
 		return err
 	}

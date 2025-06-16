@@ -17,13 +17,13 @@ func (v Vault) getFilepath(filename string) string {
 	return filepath.Join(v.Path, filename) + ".crypt"
 }
 
-func (v Vault) LoadPassword(filename string) (*Password, error) {
+func (v Vault) LoadPassword(passkey, filename string) (*Password, error) {
 	bytes, err := os.ReadFile(v.getFilepath(filename))
 	if err != nil {
 		return nil, util.ChainError(err, "error reading crypt file from vault")
 	}
 
-	password, err := DecryptPassword(bytes)
+	password, err := DecryptPassword(passkey, bytes)
 	if err != nil {
 		return nil, err
 	}

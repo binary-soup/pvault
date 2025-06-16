@@ -7,9 +7,8 @@ import (
 	"github.com/binary-soup/go-command/util"
 )
 
-const PASSKEY = "Password123!"
-
 type Password struct {
+	Passkey       string   `json:"passkey"`
 	Username      string   `json:"username"`
 	Password      string   `json:"password"`
 	URL           string   `json:"url,omitempty"`
@@ -20,8 +19,8 @@ func LoadPasswordFile(path string) (*Password, error) {
 	return util.LoadJSON[Password]("password", path)
 }
 
-func DecryptPassword(bytes []byte) (*Password, error) {
-	c, err := crypt.LoadCrypt(PASSKEY, bytes)
+func DecryptPassword(passkey string, bytes []byte) (*Password, error) {
+	c, err := crypt.LoadCrypt(passkey, bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +50,7 @@ func (password Password) Encrypt() ([]byte, error) {
 		return nil, util.ChainError(err, "error marshaling password JSON")
 	}
 
-	c, err := crypt.NewCrypt(PASSKEY)
+	c, err := crypt.NewCrypt(password.Passkey)
 	if err != nil {
 		return nil, util.ChainError(err, "error initializing crypt tool")
 	}
