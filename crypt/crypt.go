@@ -2,7 +2,7 @@ package crypt
 
 import "github.com/binary-soup/go-command/util"
 
-func (c Crypt) Encrypt(plaintext []byte) ([]byte, error) {
+func (c Crypt) Encrypt(plaintext []byte) (DataBlock, error) {
 	nonce, err := randNonce()
 	if err != nil {
 		return nil, err
@@ -10,40 +10,19 @@ func (c Crypt) Encrypt(plaintext []byte) ([]byte, error) {
 
 	ciphertext := c.Cipher.Seal(nil, nonce, plaintext, nil)
 
-	return buildCipherText(c.Salt, nonce, ciphertext), nil
+	return BuildDataBlock(c.PasskeyHash, c.Salt, nonce, ciphertext), nil
 }
 
 func (c Crypt) Decrypt(bytes []byte) ([]byte, error) {
-	nonceStart := SALT_SIZE + NONCE_SIZE
-
-	if len(bytes) < nonceStart {
-		return nil, util.Error("data too short for nonce")
+	block, err := LoadDataBlock(bytes)
+	if err != nil {
+		return nil, err
 	}
-	nonce, ciphertext := bytes[SALT_SIZE:nonceStart], bytes[nonceStart:]
 
-	plaintext, err := c.Cipher.Open(nil, nonce, ciphertext, nil)
+	plaintext, err := c.Cipher.Open(nil, block.Nonce(), block.Ciphertext(), nil)
 	if err != nil {
 		return nil, util.ChainError(err, "error decrypting bytes")
 	}
 
 	return plaintext, nil
-}
-
-func buildCipherText(data ...[]byte) []byte {
-	size := 0
-	for _, bytes := range data {
-		size += len(bytes)
-	}
-
-	ciphertext := make([]byte, size)
-	idx := 0
-
-	for _, bytes := range data {
-		for _, b := range bytes {
-			ciphertext[idx] = b
-			idx++
-		}
-	}
-
-	return ciphertext
 }

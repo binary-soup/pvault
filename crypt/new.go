@@ -11,6 +11,7 @@ import (
 )
 
 const (
+	BCRYPT_HASH_SIZE  = 60
 	SALT_SIZE         = 16
 	NONCE_SIZE        = 12 // AES-GCM standard nonce
 	KEY_SIZE          = 32 // AES-256
@@ -33,12 +34,17 @@ func NewCrypt(passkey string) (*Crypt, error) {
 }
 
 func LoadCrypt(passkey string, bytes []byte) (*Crypt, error) {
-	if len(bytes) < SALT_SIZE {
-		return nil, util.Error("data to short for salt")
+	block, err := LoadDataBlock(bytes)
+	if err != nil {
+		return nil, err
 	}
-	salt := bytes[:SALT_SIZE]
 
-	return newCrypt(passkey, salt)
+	err = bcrypt.CompareHashAndPassword(block.BCryptHash(), []byte(passkey))
+	if err != nil {
+		return nil, util.Error("invalid passkey")
+	}
+
+	return newCrypt(passkey, block.Salt())
 }
 
 func newCrypt(passkey string, salt []byte) (*Crypt, error) {

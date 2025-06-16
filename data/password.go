@@ -23,7 +23,7 @@ func LoadPasswordFile(path string) (*Password, error) {
 func DecryptPassword(bytes []byte) (*Password, error) {
 	c, err := crypt.LoadCrypt(PASSKEY, bytes)
 	if err != nil {
-		return nil, util.ChainError(err, "error initializing crypt tool")
+		return nil, err
 	}
 
 	plaintext, err := c.Decrypt(bytes)
