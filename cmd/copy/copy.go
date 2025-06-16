@@ -2,7 +2,6 @@ package cmdcopy
 
 import (
 	"passwords/data"
-	"passwords/tools"
 
 	"github.com/atotto/clipboard"
 	"github.com/binary-soup/go-command/command"
@@ -37,12 +36,7 @@ func (cmd CopyCommand) Run(args []string) error {
 	}
 	filename := *name + ".json"
 
-	passkey, err := tools.ReadPasskey()
-	if err != nil {
-		return err
-	}
-
-	password, err := cfg.Vault.LoadPassword(passkey, filename)
+	password, err := cfg.Vault.LoadPassword(filename)
 	if err != nil {
 		return err
 	}

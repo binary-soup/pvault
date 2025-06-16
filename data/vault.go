@@ -2,6 +2,8 @@ package data
 
 import (
 	"os"
+	"passwords/crypt"
+	"passwords/tools"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -17,18 +19,29 @@ func (v Vault) getFilepath(filename string) string {
 	return filepath.Join(v.Path, filename) + ".crypt"
 }
 
-func (v Vault) LoadPassword(passkey, filename string) (*Password, error) {
+func (v Vault) LoadPassword(filename string) (*Password, error) {
 	bytes, err := os.ReadFile(v.getFilepath(filename))
 	if err != nil {
 		return nil, util.ChainError(err, "error reading crypt file from vault")
 	}
 
-	password, err := DecryptPassword(passkey, bytes)
-	if err != nil {
-		return nil, err
-	}
+	for {
+		passkey, err := tools.ReadPasskey("Enter")
+		if err != nil {
+			return nil, err
+		}
 
-	return password, nil
+		password, err := DecryptPassword(passkey, bytes)
+		if err == nil {
+			return password, nil
+		}
+
+		if err.Error() == crypt.INVALID_PASSKEY {
+			continue
+		} else {
+			return nil, err
+		}
+	}
 }
 
 func (v Vault) SavePassword(password *Password, filename string) error {

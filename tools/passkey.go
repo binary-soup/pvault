@@ -9,8 +9,8 @@ import (
 	"golang.org/x/term"
 )
 
-func ReadPasskey() (string, error) {
-	fmt.Printf("Enter %s: ", style.Bolded.Format("PASSKEY"))
+func ReadPasskey(prompt string) (string, error) {
+	fmt.Printf("%s %s: ", prompt, style.Bolded.Format("PASSKEY"))
 
 	bytes, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
@@ -19,4 +19,26 @@ func ReadPasskey() (string, error) {
 
 	fmt.Println()
 	return string(bytes), nil
+}
+
+func VerifyPasskey(passkey string) error {
+	for {
+		input, err := ReadPasskey("Verify")
+		if err != nil {
+			return err
+		}
+
+		if input == passkey {
+			return nil
+		}
+	}
+}
+
+func ReadAndVerifyPasskey(prompt string) (string, error) {
+	passkey, err := ReadPasskey(prompt)
+	if err != nil {
+		return "", err
+	}
+
+	return passkey, VerifyPasskey(passkey)
 }

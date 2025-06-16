@@ -3,6 +3,7 @@ package cmdlock
 import (
 	"os"
 	"passwords/data"
+	"passwords/tools"
 	"path/filepath"
 
 	"github.com/binary-soup/go-command/command"
@@ -36,6 +37,16 @@ func (cmd LockCommand) Run(args []string) error {
 	filename := *name + ".json"
 
 	password, err := data.LoadPasswordFile(filename)
+	if err != nil {
+		return err
+	}
+
+	if password.Passkey == "" {
+		password.Passkey, err = tools.ReadAndVerifyPasskey("Enter New")
+	} else {
+		err = tools.VerifyPasskey(password.Passkey)
+	}
+
 	if err != nil {
 		return err
 	}

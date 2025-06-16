@@ -18,6 +18,8 @@ const (
 	PBKDF2_ITERATIONS = 100_000
 )
 
+const INVALID_PASSKEY = "invalid passkey"
+
 type Crypt struct {
 	PasskeyHash []byte
 	Salt        []byte
@@ -25,12 +27,17 @@ type Crypt struct {
 }
 
 func NewCrypt(passkey string) (*Crypt, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(passkey), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, util.ChainError(err, "error hashing passkey")
+	}
+
 	salt, err := randSalt()
 	if err != nil {
 		return nil, err
 	}
 
-	return newCrypt(passkey, salt)
+	return newCrypt(passkey, hash, salt)
 }
 
 func LoadCrypt(passkey string, bytes []byte) (*Crypt, error) {
@@ -41,18 +48,13 @@ func LoadCrypt(passkey string, bytes []byte) (*Crypt, error) {
 
 	err = bcrypt.CompareHashAndPassword(block.BCryptHash(), []byte(passkey))
 	if err != nil {
-		return nil, util.Error("invalid passkey")
+		return nil, util.Error(INVALID_PASSKEY)
 	}
 
-	return newCrypt(passkey, block.Salt())
+	return newCrypt(passkey, block.BCryptHash(), block.Salt())
 }
 
-func newCrypt(passkey string, salt []byte) (*Crypt, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(passkey), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, util.ChainError(err, "error hashing passkey")
-	}
-
+func newCrypt(passkey string, hash, salt []byte) (*Crypt, error) {
 	key, err := pbkdf2.Key(sha256.New, passkey, salt, PBKDF2_ITERATIONS, KEY_SIZE)
 	if err != nil {
 		return nil, util.ChainError(err, "error generating key from passkey")
