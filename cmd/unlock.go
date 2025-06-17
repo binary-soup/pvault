@@ -32,14 +32,20 @@ func (cmd UnlockCommand) Run(args []string) error {
 	if *name == "" {
 		return util.Error("name must not be empty")
 	}
-	filename := *name + ".json"
 
-	password, err := workflows.DecryptFromVault(cfg.Vault, filename)
+	password, index, err := workflows.DecryptFromVault(cfg.Vault, *name)
 	if err != nil {
 		return err
 	}
 
+	filename := *name + ".json"
+
 	err = password.SaveToFile(filename)
+	if err != nil {
+		return err
+	}
+
+	err = index.SaveToFile(*name + ".index.json")
 	if err != nil {
 		return err
 	}
@@ -49,6 +55,6 @@ func (cmd UnlockCommand) Run(args []string) error {
 		return err
 	}
 
-	fmt.Printf("%s -> %s\n", ITEM_STYLE.Format(filename), style.BoldInfo.Format("Loaded to Vault"))
+	fmt.Printf("%s -> %s\n", ITEM_STYLE.Format(filename), style.BoldInfo.Format("Loaded from Vault"))
 	return nil
 }

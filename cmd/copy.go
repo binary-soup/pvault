@@ -36,9 +36,8 @@ func (cmd CopyCommand) Run(args []string) error {
 	if *name == "" {
 		return util.Error("name must not be empty")
 	}
-	filename := *name + ".json"
 
-	password, err := workflows.DecryptFromVault(cfg.Vault, filename)
+	password, _, err := workflows.DecryptFromVault(cfg.Vault, *name)
 	if err != nil {
 		return err
 	}

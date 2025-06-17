@@ -8,9 +8,9 @@ import (
 )
 
 type Password struct {
-	Passkey       string   `json:"passkey"`
-	Username      string   `json:"username"`
+	Name          string   `json:"name"`
 	Password      string   `json:"password"`
+	Username      string   `json:"username,omitempty"`
 	URL           string   `json:"url,omitempty"`
 	RecoveryCodes []string `json:"recovery_codes,omitempty"`
 }

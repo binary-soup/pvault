@@ -13,6 +13,15 @@ type Vault struct {
 	Path string `json:"path"`
 }
 
+func (v *Vault) Init() error {
+	err := os.Mkdir(v.Path, 0755)
+	if err != nil && !os.IsExist(err) {
+		return util.ChainError(err, "error creating vault directory")
+	}
+
+	return nil
+}
+
 func (v Vault) getFilepath(filename string) string {
 	return filepath.Join(v.Path, filename)
 }

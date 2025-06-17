@@ -22,9 +22,9 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
-	err = os.Mkdir(cfg.Vault.Path, 0755)
-	if err != nil && !os.IsExist(err) {
-		return nil, util.ChainError(err, "error creating vault directory")
+	err = cfg.Vault.Init()
+	if err != nil {
+		return nil, err
 	}
 
 	return cfg, nil

@@ -34,23 +34,28 @@ func (cmd LockCommand) Run(args []string) error {
 	if *name == "" {
 		return util.Error("name must not be empty")
 	}
+
 	filename := *name + ".json"
+	indexFile := *name + ".index.json"
+
+	index, err := data.LoadIndexFile(indexFile)
+	if err != nil {
+		index = &data.Index{}
+	}
 
 	password, err := data.LoadPasswordFile(filename)
 	if err != nil {
 		return err
 	}
 
-	err = workflows.EncryptToVault(cfg.Vault, password, filename)
+	err = workflows.EncryptToVault(cfg.Vault, password, index, *name)
 	if err != nil {
 		return err
 	}
 
 	if !*keep {
-		err = os.Remove(filename)
-		if err != nil {
-			return util.ChainError(err, "error deleting password file")
-		}
+		os.Remove(filename)
+		os.Remove(indexFile)
 	}
 
 	fmt.Printf("%s -> %s\n", ITEM_STYLE.Format(filename), style.BoldInfo.Format("Saved to Vault"))
