@@ -21,7 +21,8 @@ func NewUnlockCommand() UnlockCommand {
 }
 
 func (cmd UnlockCommand) Run(args []string) error {
-	name := cmd.Flags.String("name", "", "name of the vault item")
+	id := cmd.Flags.Uint("id", 0, "id of the vault item (use 'search' to query by name)")
+	out := cmd.Flags.String("out", "", "name of the out file")
 	cmd.Flags.Parse(args)
 
 	cfg, err := data.LoadConfig()
@@ -29,32 +30,34 @@ func (cmd UnlockCommand) Run(args []string) error {
 		return err
 	}
 
-	if *name == "" {
-		return util.Error("name must not be empty")
+	if *id == 0 {
+		return util.Error("'id' missing or invalid")
 	}
 
-	password, index, err := workflows.DecryptFromVault(cfg.Vault, *name)
+	if *out == "" {
+		return util.Error("'out' must not be empty")
+	}
+
+	password, index, err := workflows.DecryptFromVault(cfg.Vault, *id)
 	if err != nil {
 		return err
 	}
 
-	filename := *name + ".json"
-
-	err = password.SaveToFile(filename)
+	err = password.SaveToFile(*out + ".json")
 	if err != nil {
 		return err
 	}
 
-	err = index.SaveToFile(*name + ".index.json")
+	err = index.SaveToFile(*out + ".index.json")
 	if err != nil {
 		return err
 	}
 
-	err = workflows.DeleteFromVault(cfg.Vault, filename)
+	err = workflows.DeleteFromVault(cfg.Vault, *id)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("%s -> %s\n", ITEM_STYLE.Format(filename), style.BoldInfo.Format("Loaded from Vault"))
+	fmt.Printf("%s -> %s\n", ITEM_STYLE.FormatF("\"%s\"", password.Name), style.BoldInfo.Format("Loaded from Vault"))
 	return nil
 }

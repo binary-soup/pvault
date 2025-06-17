@@ -22,6 +22,10 @@ func (v *Vault) Init() error {
 	return nil
 }
 
+func (v Vault) NewIndex() *Index {
+	return &Index{}
+}
+
 func (v Vault) getFilepath(filename string) string {
 	return filepath.Join(v.Path, filename)
 }

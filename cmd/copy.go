@@ -22,7 +22,7 @@ func NewCopyCommand() CopyCommand {
 }
 
 func (cmd CopyCommand) Run(args []string) error {
-	name := cmd.Flags.String("name", "", "name of the vault item")
+	id := cmd.Flags.Uint("id", 0, "id of the vault item (use 'search' to query by name)")
 	u := cmd.Flags.Bool("u", false, "copy username")
 	url := cmd.Flags.Bool("url", false, "copy url")
 	p := cmd.Flags.Bool("p", true, "copy password")
@@ -33,11 +33,11 @@ func (cmd CopyCommand) Run(args []string) error {
 		return err
 	}
 
-	if *name == "" {
-		return util.Error("name must not be empty")
+	if *id == 0 {
+		return util.Error("'id' missing or invalid")
 	}
 
-	password, _, err := workflows.DecryptFromVault(cfg.Vault, *name)
+	password, _, err := workflows.DecryptFromVault(cfg.Vault, *id)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (cmd CopyCommand) Run(args []string) error {
 		return util.ChainError(err, "error copying to clipboard")
 	}
 
-	fmt.Printf("%s%s -> %s\n", ITEM_STYLE.Format(*name+"."), ITEM_HIGHLIGHT.Format(field), style.BoldInfo.Format("Copied to Clipboard"))
+	fmt.Printf("%s%s -> %s\n", ITEM_STYLE.FormatF("\"%s\".", password.Name), ITEM_HIGHLIGHT.Format(field), style.BoldInfo.Format("Copied to Clipboard"))
 	return nil
 }
 

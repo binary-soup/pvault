@@ -1,6 +1,7 @@
 package workflows
 
 import (
+	"fmt"
 	"passwords/crypt"
 	"passwords/data"
 	"passwords/tools"
@@ -8,7 +9,11 @@ import (
 	"github.com/binary-soup/go-command/util"
 )
 
-func EncryptToVault(vault data.Vault, password *data.Password, index *data.Index, filename string) error {
+func vaultFilename(id uint) string {
+	return fmt.Sprintf("u%d.crypt", id)
+}
+
+func EncryptToVault(vault data.Vault, password *data.Password, index *data.Index) error {
 	var err error
 
 	if index.Passkey == "" {
@@ -31,7 +36,7 @@ func EncryptToVault(vault data.Vault, password *data.Password, index *data.Index
 		return err
 	}
 
-	err = vault.SaveData(bytes, filename+".json.crypt")
+	err = vault.SaveData(bytes, vaultFilename(index.ID))
 	if err != nil {
 		return err
 	}
@@ -39,8 +44,8 @@ func EncryptToVault(vault data.Vault, password *data.Password, index *data.Index
 	return nil
 }
 
-func DecryptFromVault(vault data.Vault, filename string) (*data.Password, *data.Index, error) {
-	bytes, err := vault.LoadData(filename + ".json.crypt")
+func DecryptFromVault(vault data.Vault, id uint) (*data.Password, *data.Index, error) {
+	bytes, err := vault.LoadData(vaultFilename(id))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -65,6 +70,7 @@ func DecryptFromVault(vault data.Vault, filename string) (*data.Password, *data.
 		}
 
 		index := &data.Index{
+			ID:      id,
 			Passkey: passkey,
 		}
 
@@ -72,8 +78,8 @@ func DecryptFromVault(vault data.Vault, filename string) (*data.Password, *data.
 	}
 }
 
-func DeleteFromVault(vault data.Vault, filename string) error {
-	return vault.Delete(filename + ".crypt")
+func DeleteFromVault(vault data.Vault, id uint) error {
+	return vault.Delete(vaultFilename(id))
 }
 
 func SearchVault(vault data.Vault, search string) ([]string, error) {

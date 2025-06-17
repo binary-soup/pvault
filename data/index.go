@@ -3,6 +3,7 @@ package data
 import "github.com/binary-soup/go-command/util"
 
 type Index struct {
+	ID      uint   `json:"id"`
 	Passkey string `json:"passkey"`
 }
 
