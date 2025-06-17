@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"passwords/data"
+	"passwords/workflows"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
@@ -32,7 +34,7 @@ func (cmd UnlockCommand) Run(args []string) error {
 	}
 	filename := *name + ".json"
 
-	password, err := cfg.Vault.LoadPassword(filename)
+	password, err := workflows.DecryptFromVault(cfg.Vault, filename)
 	if err != nil {
 		return err
 	}
@@ -42,13 +44,11 @@ func (cmd UnlockCommand) Run(args []string) error {
 		return err
 	}
 
-	err = cfg.Vault.Delete(filename)
+	err = workflows.DeleteFromVault(cfg.Vault, filename)
 	if err != nil {
 		return err
 	}
 
-	style.BoldInfo.Print("Loaded from Vault -> ")
-	style.New(style.Yellow).Println(filename)
-
+	fmt.Printf("%s -> %s\n", ITEM_STYLE.Format(filename), style.BoldInfo.Format("Loaded to Vault"))
 	return nil
 }

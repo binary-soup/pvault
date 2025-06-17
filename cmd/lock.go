@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"passwords/data"
-	"passwords/tools"
-	"path/filepath"
+	"passwords/workflows"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
@@ -41,17 +41,7 @@ func (cmd LockCommand) Run(args []string) error {
 		return err
 	}
 
-	if password.Passkey == "" {
-		password.Passkey, err = tools.ReadAndVerifyPasskey("Enter New")
-	} else {
-		err = tools.VerifyPasskey(password.Passkey)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	err = cfg.Vault.SavePassword(password, filepath.Base(filename))
+	err = workflows.EncryptToVault(cfg.Vault, password, filename)
 	if err != nil {
 		return err
 	}
@@ -63,8 +53,6 @@ func (cmd LockCommand) Run(args []string) error {
 		}
 	}
 
-	style.New(style.Yellow).Print(filename)
-	style.BoldInfo.Println(" -> Saved to Vault.")
-
+	fmt.Printf("%s -> %s\n", ITEM_STYLE.Format(filename), style.BoldInfo.Format("Saved to Vault"))
 	return nil
 }

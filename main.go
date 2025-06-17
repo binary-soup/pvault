@@ -18,7 +18,7 @@ func main() {
 		cmd.NewLockCommand(),
 		cmd.NewUnlockCommand(),
 		cmd.NewCopyCommand(),
-		cmd.NewListCommand(),
+		cmd.NewSearchCommand(),
 	)
 
 	if *ls || len(os.Args) < 2 {

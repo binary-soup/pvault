@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"passwords/data"
+	"passwords/workflows"
 
 	"github.com/atotto/clipboard"
 	"github.com/binary-soup/go-command/command"
@@ -36,20 +38,20 @@ func (cmd CopyCommand) Run(args []string) error {
 	}
 	filename := *name + ".json"
 
-	password, err := cfg.Vault.LoadPassword(filename)
+	password, err := workflows.DecryptFromVault(cfg.Vault, filename)
 	if err != nil {
 		return err
 	}
 
 	field := ""
 	if *u {
-		field = "username"
+		field = "USERNAME"
 		err = cmd.copyToClipboard(password.Username)
 	} else if *url {
 		field = "URL"
 		err = cmd.copyToClipboard(password.URL)
 	} else if *p {
-		field = "password"
+		field = "PASSWORD"
 		err = cmd.copyToClipboard(password.Password)
 	}
 
@@ -57,9 +59,7 @@ func (cmd CopyCommand) Run(args []string) error {
 		return util.ChainError(err, "error copying to clipboard")
 	}
 
-	style.New(style.Yellow).PrintF("%s.%s", *name, field)
-	style.BoldInfo.Println(" -> Copied to Clipboard!")
-
+	fmt.Printf("%s%s -> %s\n", ITEM_STYLE.Format(*name+"."), ITEM_HIGHLIGHT.Format(field), style.BoldInfo.Format("Copied to Clipboard"))
 	return nil
 }
 

@@ -2,8 +2,6 @@ package data
 
 import (
 	"os"
-	"passwords/crypt"
-	"passwords/tools"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -16,58 +14,37 @@ type Vault struct {
 }
 
 func (v Vault) getFilepath(filename string) string {
-	return filepath.Join(v.Path, filename) + ".crypt"
+	return filepath.Join(v.Path, filename)
 }
 
-func (v Vault) LoadPassword(filename string) (*Password, error) {
-	bytes, err := os.ReadFile(v.getFilepath(filename))
+func (v Vault) SaveData(bytes []byte, filename string) error {
+	err := os.WriteFile(v.getFilepath(filename), bytes, 0600)
 	if err != nil {
-		return nil, util.ChainError(err, "error reading crypt file from vault")
-	}
-
-	for {
-		passkey, err := tools.ReadPasskey("Enter")
-		if err != nil {
-			return nil, err
-		}
-
-		password, err := DecryptPassword(passkey, bytes)
-		if err == nil {
-			return password, nil
-		}
-
-		if err.Error() == crypt.INVALID_PASSKEY {
-			continue
-		} else {
-			return nil, err
-		}
-	}
-}
-
-func (v Vault) SavePassword(password *Password, filename string) error {
-	bytes, err := password.Encrypt()
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(v.getFilepath(filename), bytes, 0600)
-	if err != nil {
-		return util.ChainError(err, "error saving crypt file to vault")
+		return util.ChainError(err, "error saving file to vault")
 	}
 
 	return nil
+}
+
+func (v Vault) LoadData(filename string) ([]byte, error) {
+	bytes, err := os.ReadFile(v.getFilepath(filename))
+	if err != nil {
+		return nil, util.ChainError(err, "error reading file from vault")
+	}
+
+	return bytes, err
 }
 
 func (v Vault) Delete(filename string) error {
 	err := os.Remove(v.getFilepath(filename))
 	if err != nil {
-		return util.ChainError(err, "error deleting crypt file from vault")
+		return util.ChainError(err, "error deleting file from vault")
 	}
 
 	return nil
 }
 
-func (v Vault) Search(substring string) ([]string, error) {
+func (v Vault) Search(substring, ext string) ([]string, error) {
 	entries, err := os.ReadDir(v.Path)
 	if err != nil {
 		return nil, util.ChainError(err, "error reading vault directory")
@@ -76,7 +53,7 @@ func (v Vault) Search(substring string) ([]string, error) {
 	items := []string{}
 
 	for _, entry := range entries {
-		name, ok := strings.CutSuffix(entry.Name(), ".json.crypt")
+		name, ok := strings.CutSuffix(entry.Name(), ext)
 		if !ok {
 			continue
 		}

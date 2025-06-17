@@ -18,8 +18,6 @@ const (
 	PBKDF2_ITERATIONS = 100_000
 )
 
-const INVALID_PASSKEY = "invalid passkey"
-
 type Crypt struct {
 	PasskeyHash []byte
 	Salt        []byte
@@ -40,18 +38,19 @@ func NewCrypt(passkey string) (*Crypt, error) {
 	return newCrypt(passkey, hash, salt)
 }
 
-func LoadCrypt(passkey string, bytes []byte) (*Crypt, error) {
+func LoadCrypt(passkey string, bytes []byte) (*Crypt, bool, error) {
 	block, err := LoadDataBlock(bytes)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	err = bcrypt.CompareHashAndPassword(block.BCryptHash(), []byte(passkey))
 	if err != nil {
-		return nil, util.Error(INVALID_PASSKEY)
+		return nil, true, nil
 	}
 
-	return newCrypt(passkey, block.BCryptHash(), block.Salt())
+	c, err := newCrypt(passkey, block.BCryptHash(), block.Salt())
+	return c, false, err
 }
 
 func newCrypt(passkey string, hash, salt []byte) (*Crypt, error) {
