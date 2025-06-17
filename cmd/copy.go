@@ -1,4 +1,4 @@
-package cmdcopy
+package cmd
 
 import (
 	"passwords/data"

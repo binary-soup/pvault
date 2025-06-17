@@ -1,4 +1,4 @@
-package cmdunlock
+package cmd
 
 import (
 	"passwords/data"

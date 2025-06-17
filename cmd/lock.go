@@ -1,4 +1,4 @@
-package cmdlock
+package cmd
 
 import (
 	"os"

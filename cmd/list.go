@@ -1,4 +1,4 @@
-package cmdlist
+package cmd
 
 import (
 	"passwords/data"
