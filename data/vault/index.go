@@ -1,4 +1,4 @@
-package data
+package vault
 
 import "github.com/binary-soup/go-command/util"
 

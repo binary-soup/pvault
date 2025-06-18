@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"passwords/crypt"
 	"passwords/data"
+	"passwords/data/vault"
 	"passwords/tools"
 
 	"github.com/binary-soup/go-command/util"
@@ -13,7 +14,7 @@ func vaultFilename(id uint) string {
 	return fmt.Sprintf("u%d.crypt", id)
 }
 
-func EncryptToVault(vault data.Vault, password *data.Password, index *data.Index) error {
+func EncryptToVault(v vault.Vault, password *data.Password, index *vault.Index) error {
 	var err error
 
 	if index.Passkey == "" {
@@ -36,7 +37,7 @@ func EncryptToVault(vault data.Vault, password *data.Password, index *data.Index
 		return err
 	}
 
-	err = vault.SaveData(bytes, vaultFilename(index.ID))
+	err = v.SaveData(bytes, vaultFilename(index.ID))
 	if err != nil {
 		return err
 	}
@@ -44,8 +45,8 @@ func EncryptToVault(vault data.Vault, password *data.Password, index *data.Index
 	return nil
 }
 
-func DecryptFromVault(vault data.Vault, id uint) (*data.Password, *data.Index, error) {
-	bytes, err := vault.LoadData(vaultFilename(id))
+func DecryptFromVault(v vault.Vault, id uint) (*data.Password, *vault.Index, error) {
+	bytes, err := v.LoadData(vaultFilename(id))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -69,7 +70,7 @@ func DecryptFromVault(vault data.Vault, id uint) (*data.Password, *data.Index, e
 			return nil, nil, err
 		}
 
-		index := &data.Index{
+		index := &vault.Index{
 			ID:      id,
 			Passkey: passkey,
 		}
@@ -78,10 +79,6 @@ func DecryptFromVault(vault data.Vault, id uint) (*data.Password, *data.Index, e
 	}
 }
 
-func DeleteFromVault(vault data.Vault, id uint) error {
+func DeleteFromVault(vault vault.Vault, id uint) error {
 	return vault.Delete(vaultFilename(id))
-}
-
-func SearchVault(vault data.Vault, search string) ([]string, error) {
-	return vault.Search(search, ".crypt")
 }

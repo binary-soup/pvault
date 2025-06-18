@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"passwords/data"
+	"passwords/data/vault"
 	"passwords/workflows"
 
 	"github.com/binary-soup/go-command/command"
@@ -40,7 +41,7 @@ func (cmd LockCommand) Run(args []string) error {
 		return err
 	}
 
-	index, err := data.LoadIndexFile(*name + ".index.json")
+	index, err := vault.LoadIndexFile(*name + ".index.json")
 	if err != nil {
 		index = cfg.Vault.NewIndex()
 	}

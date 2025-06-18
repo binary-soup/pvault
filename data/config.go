@@ -2,13 +2,14 @@ package data
 
 import (
 	"os"
+	"passwords/data/vault"
 	"path/filepath"
 
 	"github.com/binary-soup/go-command/util"
 )
 
 type Config struct {
-	Vault Vault `json:"vault"`
+	Vault vault.Vault `json:"vault"`
 }
 
 const CONFIG_PATH = "config.json"
