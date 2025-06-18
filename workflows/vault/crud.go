@@ -1,4 +1,4 @@
-package workflows
+package vw
 
 import (
 	"fmt"
@@ -8,26 +8,26 @@ import (
 	"passwords/tools"
 
 	"github.com/binary-soup/go-command/util"
+	"github.com/google/uuid"
 )
 
-func vaultFilename(id uint) string {
-	return fmt.Sprintf("u%d.crypt", id)
-}
+func (v VaultWorkflow) Encrypt(password *data.Password, cache *vault.Cache) error {
+	if v.Vault.NameExists(password.Name) {
+		return util.Error(fmt.Sprintf("name \"%s\" already exists", password.Name))
+	}
 
-func EncryptToVault(v vault.Vault, password *data.Password, index *vault.Index) error {
 	var err error
-
-	if index.Passkey == "" {
-		index.Passkey, err = tools.ReadAndVerifyPasskey("Choose New")
+	if cache.Passkey == "" {
+		cache.Passkey, err = tools.ReadAndVerifyPasskey("Choose New")
 	} else {
-		err = tools.VerifyPasskey(index.Passkey)
+		err = tools.VerifyPasskey(cache.Passkey)
 	}
 
 	if err != nil {
 		return err
 	}
 
-	c, err := crypt.NewCrypt(index.Passkey)
+	c, err := crypt.NewCrypt(cache.Passkey)
 	if err != nil {
 		return util.ChainError(err, "error initializing crypt tool")
 	}
@@ -37,16 +37,11 @@ func EncryptToVault(v vault.Vault, password *data.Password, index *vault.Index) 
 		return err
 	}
 
-	err = v.SaveData(bytes, vaultFilename(index.ID))
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return v.Vault.SaveData(bytes, uuid.New(), password.Name)
 }
 
-func DecryptFromVault(v vault.Vault, id uint) (*data.Password, *vault.Index, error) {
-	bytes, err := v.LoadData(vaultFilename(id))
+func (v VaultWorkflow) Decrypt(name string) (*data.Password, *vault.Cache, error) {
+	bytes, err := v.Vault.ReadData(name)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -70,8 +65,7 @@ func DecryptFromVault(v vault.Vault, id uint) (*data.Password, *vault.Index, err
 			return nil, nil, err
 		}
 
-		index := &vault.Index{
-			ID:      id,
+		index := &vault.Cache{
 			Passkey: passkey,
 		}
 
@@ -79,6 +73,6 @@ func DecryptFromVault(v vault.Vault, id uint) (*data.Password, *vault.Index, err
 	}
 }
 
-func DeleteFromVault(vault vault.Vault, id uint) error {
-	return vault.Delete(vaultFilename(id))
+func (v VaultWorkflow) Delete(name string) error {
+	return v.Vault.DeleteData(name)
 }

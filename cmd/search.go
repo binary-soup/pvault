@@ -1,12 +1,10 @@
 package cmd
 
 import (
-	"fmt"
 	"passwords/data"
-	"passwords/data/vault"
+	vw "passwords/workflows/vault"
 
 	"github.com/binary-soup/go-command/command"
-	"github.com/binary-soup/go-command/style"
 )
 
 type SearchCommand struct {
@@ -20,7 +18,7 @@ func NewSearchCommand() SearchCommand {
 }
 
 func (cmd SearchCommand) Run(args []string) error {
-	substring := cmd.Flags.String("s", "", "the search term. Leave blank to list all")
+	search := cmd.Flags.String("s", "", "the search term. Leave blank to list all")
 	cmd.Flags.Parse(args)
 
 	cfg, err := data.LoadConfig()
@@ -28,18 +26,6 @@ func (cmd SearchCommand) Run(args []string) error {
 		return err
 	}
 
-	for _, item := range cfg.Vault.Search(*substring) {
-		cmd.styleItem(item)
-	}
-
+	vw.NewVaultWorkflow(cfg.Vault).Search(*search)
 	return nil
-}
-
-func (cmd SearchCommand) styleItem(item vault.SearchItem) {
-	fmt.Printf("%s %s%s%s\n",
-		style.BoldInfo.FormatF("[%d]", item.ID),
-		ITEM_STYLE.Format(item.Name[:item.MatchStart]),
-		ITEM_HIGHLIGHT.Format(item.Name[item.MatchStart:item.MatchEnd]),
-		ITEM_STYLE.Format(item.Name[item.MatchEnd:]),
-	)
 }

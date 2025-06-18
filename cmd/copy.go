@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"passwords/data"
-	"passwords/workflows"
+	vw "passwords/workflows/vault"
 
 	"github.com/atotto/clipboard"
 	"github.com/binary-soup/go-command/command"
@@ -22,7 +22,7 @@ func NewCopyCommand() CopyCommand {
 }
 
 func (cmd CopyCommand) Run(args []string) error {
-	id := cmd.Flags.Uint("id", 0, "id of the vault item (use 'search' to query by name)")
+	search := cmd.Flags.String("s", "", "the search term")
 	u := cmd.Flags.Bool("u", false, "copy username")
 	url := cmd.Flags.Bool("url", false, "copy url")
 	p := cmd.Flags.Bool("p", true, "copy password")
@@ -33,11 +33,18 @@ func (cmd CopyCommand) Run(args []string) error {
 		return err
 	}
 
-	if *id == 0 {
-		return util.Error("'id' missing or invalid")
+	if *search == "" {
+		return util.Error("(s)earch missing or invalid")
 	}
 
-	password, _, err := workflows.DecryptFromVault(cfg.Vault, *id)
+	workflow := vw.NewVaultWorkflow(cfg.Vault)
+
+	name, err := workflow.SearchExactName(*search)
+	if err != nil {
+		return err
+	}
+
+	password, _, err := workflow.Decrypt(name)
 	if err != nil {
 		return err
 	}
@@ -58,7 +65,7 @@ func (cmd CopyCommand) Run(args []string) error {
 		return util.ChainError(err, "error copying to clipboard")
 	}
 
-	fmt.Printf("%s%s -> %s\n", ITEM_STYLE.FormatF("\"%s\".", password.Name), ITEM_HIGHLIGHT.Format(field), style.BoldInfo.Format("Copied to Clipboard"))
+	fmt.Printf("%s.%s -> %s\n", NAME_STYLE.FormatF("\"%s\"", name), style.BoldUnderline.Format(field), style.BoldInfo.Format("Copied to Clipboard"))
 	return nil
 }
 

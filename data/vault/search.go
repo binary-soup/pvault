@@ -6,7 +6,6 @@ import (
 
 type SearchItem struct {
 	Name       string
-	ID         uint
 	MatchStart int
 	MatchEnd   int
 }
@@ -14,11 +13,11 @@ type SearchItem struct {
 func (v Vault) Search(substring string) []SearchItem {
 	items := []SearchItem{}
 
-	for key, val := range v.indexMap {
+	for name := range v.index {
 		if substring == "" {
-			items = append(items, v.newSearchItem(key, val, 0, 0))
-		} else if idx := strings.Index(strings.ToLower(key), strings.ToLower(substring)); idx >= 0 {
-			items = append(items, v.newSearchItem(key, val, idx, idx+len(substring)))
+			items = append(items, v.newSearchItem(name, 0, 0))
+		} else if idx := strings.Index(strings.ToLower(name), strings.ToLower(substring)); idx >= 0 {
+			items = append(items, v.newSearchItem(name, idx, idx+len(substring)))
 		}
 
 	}
@@ -26,10 +25,9 @@ func (v Vault) Search(substring string) []SearchItem {
 	return items
 }
 
-func (Vault) newSearchItem(name string, id uint, start, end int) SearchItem {
+func (Vault) newSearchItem(name string, start, end int) SearchItem {
 	return SearchItem{
 		Name:       name,
-		ID:         id,
 		MatchStart: start,
 		MatchEnd:   end,
 	}

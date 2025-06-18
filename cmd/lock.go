@@ -5,7 +5,7 @@ import (
 	"os"
 	"passwords/data"
 	"passwords/data/vault"
-	"passwords/workflows"
+	vw "passwords/workflows/vault"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
@@ -23,7 +23,7 @@ func NewLockCommand() LockCommand {
 }
 
 func (cmd LockCommand) Run(args []string) error {
-	name := cmd.Flags.String("name", "", "name of the password file")
+	name := cmd.Flags.String("n", "", "name of the password file")
 	keep := cmd.Flags.Bool("keep", false, "keep the original password file")
 	cmd.Flags.Parse(args)
 
@@ -33,7 +33,7 @@ func (cmd LockCommand) Run(args []string) error {
 	}
 
 	if *name == "" {
-		return util.Error("'name' must not be empty")
+		return util.Error("(n)ame missing or invalid")
 	}
 
 	password, err := data.LoadPasswordFile(*name + ".json")
@@ -41,21 +41,21 @@ func (cmd LockCommand) Run(args []string) error {
 		return err
 	}
 
-	index, err := vault.LoadIndexFile(*name + ".index.json")
+	cache, err := vault.LoadCacheFile(*name + ".cache.json")
 	if err != nil {
-		index = cfg.Vault.NewIndex()
+		cache = &vault.Cache{}
 	}
 
-	err = workflows.EncryptToVault(cfg.Vault, password, index)
+	err = vw.NewVaultWorkflow(cfg.Vault).Encrypt(password, cache)
 	if err != nil {
 		return err
 	}
 
 	if !*keep {
 		os.Remove(*name + ".json")
-		os.Remove(*name + ".index.json")
+		os.Remove(*name + ".cache.json")
 	}
 
-	fmt.Printf("%s -> %s\n", ITEM_STYLE.FormatF("\"%s\"", password.Name), style.BoldInfo.Format("Saved to Vault"))
+	fmt.Printf("%s -> %s\n", NAME_STYLE.FormatF("\"%s\"", password.Name), style.BoldInfo.Format("Saved to Vault"))
 	return nil
 }

@@ -3,7 +3,8 @@ package cmd
 import (
 	"fmt"
 	"passwords/data"
-	"passwords/workflows"
+	"passwords/tools"
+	vw "passwords/workflows/vault"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
@@ -21,8 +22,9 @@ func NewUnlockCommand() UnlockCommand {
 }
 
 func (cmd UnlockCommand) Run(args []string) error {
-	id := cmd.Flags.Uint("id", 0, "id of the vault item (use 'search' to query by name)")
-	out := cmd.Flags.String("out", "", "name of the out file")
+	search := cmd.Flags.String("s", "", "the search term")
+	out := cmd.Flags.String("o", "", "name of the out file. Defaults to search term")
+	cache := cmd.Flags.Bool("cache", false, "cache the passkey for faster re-lock")
 	cmd.Flags.Parse(args)
 
 	cfg, err := data.LoadConfig()
@@ -30,15 +32,25 @@ func (cmd UnlockCommand) Run(args []string) error {
 		return err
 	}
 
-	if *id == 0 {
-		return util.Error("'id' missing or invalid")
+	if *search == "" {
+		return util.Error("(s)earch missing or invalid")
 	}
-
 	if *out == "" {
-		return util.Error("'out' must not be empty")
+		*out = *search
 	}
 
-	password, index, err := workflows.DecryptFromVault(cfg.Vault, *id)
+	workflow := vw.NewVaultWorkflow(cfg.Vault)
+
+	name, err := workflow.SearchExactName(*search)
+	if err != nil {
+		return err
+	}
+
+	if ok := tools.PromptOverwrite("OUT", *out+".json"); !ok {
+		return nil
+	}
+
+	password, index, err := workflow.Decrypt(name)
 	if err != nil {
 		return err
 	}
@@ -48,16 +60,18 @@ func (cmd UnlockCommand) Run(args []string) error {
 		return err
 	}
 
-	err = index.SaveToFile(*out + ".index.json")
+	if *cache {
+		err = index.SaveToFile(*out + ".cache.json")
+		if err != nil {
+			return err
+		}
+	}
+
+	err = workflow.Delete(name)
 	if err != nil {
 		return err
 	}
 
-	err = workflows.DeleteFromVault(cfg.Vault, *id)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("%s -> %s\n", ITEM_STYLE.FormatF("\"%s\"", password.Name), style.BoldInfo.Format("Loaded from Vault"))
+	fmt.Printf("%s -> %s\n", NAME_STYLE.FormatF("\"%s\"", password.Name), style.BoldInfo.Format("Loaded from Vault"))
 	return nil
 }
