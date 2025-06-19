@@ -52,7 +52,7 @@ func (cmd UnlockCommand) Run(args []string) error {
 		return nil
 	}
 
-	password, passkey, err := workflow.Decrypt(name)
+	password, passkey, err := workflow.Decrypt(name, cfg.Passkey.Timeout)
 	if err != nil {
 		return err
 	}

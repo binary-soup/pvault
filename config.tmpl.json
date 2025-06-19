@@ -1,5 +1,8 @@
 {
     "vault": {
         "path": "path to the vault directory"
+    },
+    "passkey": {
+        "timeout": 3.0
     }
 }

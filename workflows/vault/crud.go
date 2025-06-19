@@ -34,7 +34,7 @@ func (v VaultWorkflow) Encrypt(password *data.Password, passkey string) error {
 	return v.Vault.SaveData(bytes, password.Name)
 }
 
-func (v VaultWorkflow) Decrypt(name string) (*data.Password, string, error) {
+func (v VaultWorkflow) Decrypt(name string, timeout float32) (*data.Password, string, error) {
 	bytes, err := v.Vault.ReadData(name)
 	if err != nil {
 		return nil, "", err
@@ -51,6 +51,7 @@ func (v VaultWorkflow) Decrypt(name string) (*data.Password, string, error) {
 			return nil, "", err
 		}
 		if invalidPasskey {
+			tools.Timeout(timeout)
 			continue
 		}
 

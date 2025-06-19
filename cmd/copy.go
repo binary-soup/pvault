@@ -44,7 +44,7 @@ func (cmd CopyCommand) Run(args []string) error {
 		return err
 	}
 
-	password, _, err := workflow.Decrypt(name)
+	password, _, err := workflow.Decrypt(name, cfg.Passkey.Timeout)
 	if err != nil {
 		return err
 	}

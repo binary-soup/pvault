@@ -8,11 +8,16 @@ import (
 	"github.com/binary-soup/go-command/util"
 )
 
+const CONFIG_PATH = "config.json"
+
 type Config struct {
-	Vault vault.Vault `json:"vault"`
+	Vault   vault.Vault   `json:"vault"`
+	Passkey PasskeyConfig `json:"passkey"`
 }
 
-const CONFIG_PATH = "config.json"
+type PasskeyConfig struct {
+	Timeout float32 `json:"timeout"`
+}
 
 func LoadConfig() (*Config, error) {
 	path, _ := os.Executable()
