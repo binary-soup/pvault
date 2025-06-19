@@ -41,12 +41,29 @@ func (cmd LockCommand) Run(args []string) error {
 		return err
 	}
 
+	err = password.Validate()
+	if err != nil {
+		return util.ChainError(err, "error validating password")
+	}
+
+	if cfg.Vault.NameExists(password.Name) {
+		return util.Error(fmt.Sprintf("name \"%s\" already exists", password.Name))
+	}
+
 	cache, err := vault.LoadCacheFile(*name + ".cache.json")
 	if err != nil {
 		cache = &vault.Cache{}
 	}
 
-	err = vw.NewVaultWorkflow(cfg.Vault).Encrypt(password, cache)
+	workflow := vw.NewVaultWorkflow(cfg.Vault)
+	defer cfg.Vault.Close()
+
+	err = workflow.ChooseOrVerifyPasskey(&cache.Passkey)
+	if err != nil {
+		return err
+	}
+
+	err = workflow.Encrypt(password, cache.Passkey)
 	if err != nil {
 		return err
 	}

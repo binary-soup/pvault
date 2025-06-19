@@ -23,7 +23,7 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
-	err = cfg.Vault.Init()
+	err = cfg.Vault.Open()
 	if err != nil {
 		return nil, err
 	}

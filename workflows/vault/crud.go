@@ -1,33 +1,27 @@
 package vw
 
 import (
-	"fmt"
 	"passwords/crypt"
 	"passwords/data"
-	"passwords/data/vault"
 	"passwords/tools"
 
 	"github.com/binary-soup/go-command/util"
-	"github.com/google/uuid"
 )
 
-func (v VaultWorkflow) Encrypt(password *data.Password, cache *vault.Cache) error {
-	if v.Vault.NameExists(password.Name) {
-		return util.Error(fmt.Sprintf("name \"%s\" already exists", password.Name))
-	}
-
+func (v VaultWorkflow) ChooseOrVerifyPasskey(passkey *string) error {
 	var err error
-	if cache.Passkey == "" {
-		cache.Passkey, err = tools.ReadAndVerifyPasskey("Choose New")
+
+	if *passkey == "" {
+		*passkey, err = tools.ReadAndVerifyPasskey("Choose New")
 	} else {
-		err = tools.VerifyPasskey(cache.Passkey)
+		err = tools.VerifyPasskey(*passkey)
 	}
 
-	if err != nil {
-		return err
-	}
+	return err
+}
 
-	c, err := crypt.NewCrypt(cache.Passkey)
+func (v VaultWorkflow) Encrypt(password *data.Password, passkey string) error {
+	c, err := crypt.NewCrypt(passkey)
 	if err != nil {
 		return util.ChainError(err, "error initializing crypt tool")
 	}
@@ -37,24 +31,24 @@ func (v VaultWorkflow) Encrypt(password *data.Password, cache *vault.Cache) erro
 		return err
 	}
 
-	return v.Vault.SaveData(bytes, uuid.New(), password.Name)
+	return v.Vault.SaveData(bytes, password.Name)
 }
 
-func (v VaultWorkflow) Decrypt(name string) (*data.Password, *vault.Cache, error) {
+func (v VaultWorkflow) Decrypt(name string) (*data.Password, string, error) {
 	bytes, err := v.Vault.ReadData(name)
 	if err != nil {
-		return nil, nil, err
+		return nil, "", err
 	}
 
 	for {
 		passkey, err := tools.ReadPasskey("Enter")
 		if err != nil {
-			return nil, nil, err
+			return nil, "", err
 		}
 
 		c, invalidPasskey, err := crypt.LoadCrypt(passkey, bytes)
 		if err != nil {
-			return nil, nil, err
+			return nil, "", err
 		}
 		if invalidPasskey {
 			continue
@@ -62,14 +56,10 @@ func (v VaultWorkflow) Decrypt(name string) (*data.Password, *vault.Cache, error
 
 		password, err := data.DecryptPassword(c, bytes)
 		if err != nil {
-			return nil, nil, err
+			return nil, "", err
 		}
 
-		index := &vault.Cache{
-			Passkey: passkey,
-		}
-
-		return password, index, nil
+		return password, passkey, nil
 	}
 }
 

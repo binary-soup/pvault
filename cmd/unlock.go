@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"passwords/data"
+	"passwords/data/vault"
 	"passwords/tools"
 	vw "passwords/workflows/vault"
 
@@ -40,6 +41,7 @@ func (cmd UnlockCommand) Run(args []string) error {
 	}
 
 	workflow := vw.NewVaultWorkflow(cfg.Vault)
+	defer cfg.Vault.Close()
 
 	name, err := workflow.SearchExactName(*search)
 	if err != nil {
@@ -50,7 +52,7 @@ func (cmd UnlockCommand) Run(args []string) error {
 		return nil
 	}
 
-	password, index, err := workflow.Decrypt(name)
+	password, passkey, err := workflow.Decrypt(name)
 	if err != nil {
 		return err
 	}
@@ -61,7 +63,7 @@ func (cmd UnlockCommand) Run(args []string) error {
 	}
 
 	if *cache {
-		err = index.SaveToFile(*out + ".cache.json")
+		err = vault.NewCache(passkey).SaveToFile(*out + ".cache.json")
 		if err != nil {
 			return err
 		}

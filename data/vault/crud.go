@@ -9,16 +9,15 @@ import (
 	"github.com/google/uuid"
 )
 
-func (v Vault) SaveData(bytes []byte, id uuid.UUID, name string) error {
+func (v Vault) SaveData(bytes []byte, name string) error {
+	id := uuid.New()
+
 	err := os.WriteFile(v.filepath(id), bytes, 0600)
 	if err != nil {
 		return util.ChainError(err, "error saving file to vault")
 	}
 
-	err = v.saveIndex(name, id)
-	if err != nil {
-		return util.ChainError(err, "error saving vault index")
-	}
+	v.index[name] = id
 	return nil
 }
 
@@ -47,10 +46,7 @@ func (v Vault) DeleteData(name string) error {
 		return util.ChainError(err, "error deleting file from vault")
 	}
 
-	err = v.deleteIndex(name)
-	if err != nil {
-		return util.ChainError(err, "error deleting vault index")
-	}
+	delete(v.index, name)
 	return nil
 }
 

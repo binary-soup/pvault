@@ -19,6 +19,7 @@ func main() {
 		cmd.NewUnlockCommand(),
 		cmd.NewCopyCommand(),
 		cmd.NewSearchCommand(),
+		cmd.NewImportCommand(),
 	)
 
 	if *ls || len(os.Args) < 2 {

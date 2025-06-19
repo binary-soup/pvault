@@ -35,6 +35,16 @@ func DecryptPassword(c *crypt.Crypt, bytes []byte) (*Password, error) {
 	return password, nil
 }
 
+func (password Password) Validate() error {
+	if password.Name == "" {
+		return util.Error("\"name\" cannot be empty")
+	}
+	if password.Password == "" && len(password.RecoveryCodes) == 0 {
+		return util.Error("both \"password\" and \"recovery codes\" cannot be empty")
+	}
+	return nil
+}
+
 func (password Password) SaveToFile(path string) error {
 	return util.SaveJSON("password", &password, path)
 }
