@@ -2,23 +2,18 @@ package crypt
 
 import (
 	"crypto/rand"
-
-	"github.com/binary-soup/go-command/util"
 )
 
-func randSalt() ([]byte, error) {
-	return randBytes("salt", SALT_SIZE)
+func randSalt() []byte {
+	salt := make([]byte, SALT_SIZE)
+	rand.Read(salt)
+
+	return salt
 }
 
-func randNonce() ([]byte, error) {
-	return randBytes("nonce", NONCE_SIZE)
-}
+func randNonce() []byte {
+	nonce := make([]byte, NONCE_SIZE)
+	rand.Read(nonce)
 
-func randBytes(name string, size int) ([]byte, error) {
-	bytes := make([]byte, size)
-	if _, err := rand.Read(bytes); err != nil {
-		return nil, util.ChainErrorF(err, "error creating rand %s bytes", name)
-	}
-
-	return bytes, nil
+	return nonce
 }

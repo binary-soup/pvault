@@ -1,28 +1,62 @@
 package crypt
 
-import "github.com/binary-soup/go-command/util"
+import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/pbkdf2"
+	"crypto/sha256"
 
-func (c Crypt) Encrypt(plaintext []byte) (DataBlock, error) {
-	nonce, err := randNonce()
-	if err != nil {
-		return nil, err
-	}
+	"github.com/binary-soup/go-command/util"
+	"golang.org/x/crypto/bcrypt"
+)
 
-	ciphertext := c.Cipher.Seal(nil, nonce, plaintext, nil)
+const (
+	KEY_SIZE          = 32 // AES-256
+	PBKDF2_ITERATIONS = 100_000
+)
 
-	return BuildDataBlock(c.PasskeyHash, c.Salt, nonce, ciphertext), nil
+type Crypt struct {
+	Header Header
+	Cipher cipher.AEAD
 }
 
-func (c Crypt) Decrypt(bytes []byte) ([]byte, error) {
-	block, err := LoadDataBlock(bytes)
+func NewCrypt(passkey string) (*Crypt, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(passkey), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, err
+		return nil, util.ChainError(err, "error hashing passkey")
 	}
 
-	plaintext, err := c.Cipher.Open(nil, block.Nonce(), block.Ciphertext(), nil)
+	return newCrypt(passkey, NewHeader(hash, randSalt()))
+}
+
+func LoadCrypt(passkey string, header Header) (*Crypt, bool, error) {
+	err := bcrypt.CompareHashAndPassword(header.Hash(), []byte(passkey))
 	if err != nil {
-		return nil, util.ChainError(err, "error decrypting bytes")
+		return nil, true, nil
 	}
 
-	return plaintext, nil
+	c, err := newCrypt(passkey, header)
+	return c, false, err
+}
+
+func newCrypt(passkey string, header Header) (*Crypt, error) {
+	key, err := pbkdf2.Key(sha256.New, passkey, header.Salt(), PBKDF2_ITERATIONS, KEY_SIZE)
+	if err != nil {
+		return nil, util.ChainError(err, "error generating key from passkey")
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, util.ChainError(err, "error creating AES cipher")
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, util.ChainError(err, "error creating GCM mode")
+	}
+
+	return &Crypt{
+		Header: header,
+		Cipher: gcm,
+	}, nil
 }

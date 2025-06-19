@@ -26,16 +26,16 @@ func (v VaultWorkflow) Encrypt(password *data.Password, passkey string) error {
 		return util.ChainError(err, "error initializing crypt tool")
 	}
 
-	bytes, err := password.Encrypt(c)
+	ciphertext, err := password.Encrypt(c)
 	if err != nil {
 		return err
 	}
 
-	return v.Vault.SaveData(bytes, password.Name)
+	return v.Vault.SaveData(c.Header, ciphertext, password.Name)
 }
 
 func (v VaultWorkflow) Decrypt(name string, timeout float32) (*data.Password, string, error) {
-	bytes, err := v.Vault.ReadData(name)
+	header, ciphertext, err := v.Vault.ReadData(name)
 	if err != nil {
 		return nil, "", err
 	}
@@ -46,7 +46,7 @@ func (v VaultWorkflow) Decrypt(name string, timeout float32) (*data.Password, st
 			return nil, "", err
 		}
 
-		c, invalidPasskey, err := crypt.LoadCrypt(passkey, bytes)
+		c, invalidPasskey, err := crypt.LoadCrypt(passkey, header)
 		if err != nil {
 			return nil, "", err
 		}
@@ -55,7 +55,7 @@ func (v VaultWorkflow) Decrypt(name string, timeout float32) (*data.Password, st
 			continue
 		}
 
-		password, err := data.DecryptPassword(c, bytes)
+		password, err := data.DecryptPassword(c, ciphertext)
 		if err != nil {
 			return nil, "", err
 		}

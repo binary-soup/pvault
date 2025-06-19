@@ -19,8 +19,8 @@ func LoadPasswordFile(path string) (*Password, error) {
 	return util.LoadJSON[Password]("password", path)
 }
 
-func DecryptPassword(c *crypt.Crypt, bytes []byte) (*Password, error) {
-	plaintext, err := c.Decrypt(bytes)
+func DecryptPassword(c *crypt.Crypt, ciphertext crypt.Ciphertext) (*Password, error) {
+	plaintext, err := c.Decrypt(ciphertext)
 	if err != nil {
 		return nil, util.ChainError(err, "error decrypting password")
 	}
@@ -49,16 +49,11 @@ func (password Password) SaveToFile(path string) error {
 	return util.SaveJSON("password", &password, path)
 }
 
-func (password Password) Encrypt(c *crypt.Crypt) ([]byte, error) {
+func (password Password) Encrypt(c *crypt.Crypt) (crypt.Ciphertext, error) {
 	plaintext, err := json.Marshal(password)
 	if err != nil {
 		return nil, util.ChainError(err, "error marshaling password JSON")
 	}
 
-	ciphertext, err := c.Encrypt(plaintext)
-	if err != nil {
-		return nil, util.ChainError(err, "error encrypting password")
-	}
-
-	return ciphertext, nil
+	return c.Encrypt(plaintext), nil
 }
