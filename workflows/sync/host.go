@@ -2,16 +2,13 @@ package sw
 
 import (
 	"fmt"
-	"io"
-	"net"
 	"passwords/crypt"
 	"passwords/tools"
+	"passwords/tools/sync"
 
 	"github.com/binary-soup/go-command/style"
 	"github.com/binary-soup/go-command/util"
 )
-
-const PORT = ":9000"
 
 func (w SyncWorkflow) RunHost() error {
 	passkey, err := tools.ReadAndVerifyPasskey("Choose Host")
@@ -19,25 +16,23 @@ func (w SyncWorkflow) RunHost() error {
 		return err
 	}
 
-	ln, err := net.Listen("tcp", PORT)
+	host := sync.NewHost(":9000")
+
+	err = host.Start()
 	if err != nil {
-		return util.ChainError(err, "error starting tcp server")
+		return err
 	}
-	defer ln.Close()
+	defer host.Close()
 
-	fmt.Printf("Listening on port %s\n", style.Bolded.Format(PORT))
-
-	conn, err := ln.Accept()
+	conn, err := host.Accept()
 	if err != nil {
-		return util.ChainError(err, "error accepting client connection")
+		return err
 	}
 	defer conn.Close()
 
-	header := crypt.EmptyHeader()
-
-	_, err = conn.Read(header)
+	header, err := conn.ReadMessage("header")
 	if err != nil {
-		return util.ChainError(err, "error reading header from connection")
+		return err
 	}
 
 	c, invalidPasskey, err := crypt.LoadCrypt(passkey, header)
@@ -49,9 +44,9 @@ func (w SyncWorkflow) RunHost() error {
 		return util.ChainError(err, "error creating crypt object")
 	}
 
-	ciphertext, err := io.ReadAll(conn)
+	ciphertext, err := conn.ReadMessage("ciphertext")
 	if err != nil {
-		return util.ChainError(err, "error reading ciphertext from connection")
+		return err
 	}
 
 	plaintext, err := c.Decrypt(ciphertext)
@@ -61,6 +56,6 @@ func (w SyncWorkflow) RunHost() error {
 
 	fmt.Printf("%s: \"%s\"\n", style.Bolded.Format("MESSAGE"), string(plaintext))
 
-	//send SUCCUSS response
+	//send SUCCESS response
 	return nil
 }

@@ -1,9 +1,9 @@
 package sw
 
 import (
-	"net"
 	"passwords/crypt"
 	"passwords/tools"
+	"passwords/tools/sync"
 
 	"github.com/binary-soup/go-command/util"
 )
@@ -16,9 +16,11 @@ func (w SyncWorkflow) RunClient(addr string) error {
 		return err
 	}
 
-	conn, err := net.Dial("tcp", addr)
+	client := sync.NewClient()
+
+	conn, err := client.Connect(addr)
 	if err != nil {
-		return util.ChainErrorF(err, "error dialing host at \"%s\"", addr)
+		return nil
 	}
 	defer conn.Close()
 
@@ -29,14 +31,14 @@ func (w SyncWorkflow) RunClient(addr string) error {
 
 	ciphertext := c.Encrypt([]byte(MESSAGE))
 
-	_, err = conn.Write(c.Header)
+	err = conn.SendMessage("header", c.Header)
 	if err != nil {
-		return util.ChainError(err, "error writing header to connection")
+		return nil
 	}
 
-	_, err = conn.Write(ciphertext)
+	err = conn.SendMessage("ciphertext", ciphertext)
 	if err != nil {
-		return util.ChainError(err, "error writing ciphertext to connection")
+		return nil
 	}
 
 	return nil
