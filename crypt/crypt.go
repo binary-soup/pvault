@@ -17,7 +17,7 @@ const (
 
 type Crypt struct {
 	Header Header
-	Cipher cipher.AEAD
+	cipher cipher.AEAD
 }
 
 func NewCrypt(passkey string) (*Crypt, error) {
@@ -57,6 +57,6 @@ func newCrypt(passkey string, header Header) (*Crypt, error) {
 
 	return &Crypt{
 		Header: header,
-		Cipher: gcm,
+		cipher: gcm,
 	}, nil
 }

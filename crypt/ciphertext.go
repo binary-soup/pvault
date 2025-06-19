@@ -1,7 +1,5 @@
 package crypt
 
-import "github.com/binary-soup/go-command/util"
-
 type Ciphertext []byte
 
 const (
@@ -14,14 +12,6 @@ func NewCiphertext(nonce, text []byte) Ciphertext {
 	copy(ciphertext.Text(), text)
 
 	return ciphertext
-}
-
-func LoadCiphertext(bytes []byte) (Header, error) {
-	if len(bytes) <= NONCE_SIZE {
-		return nil, util.Error("data shorter than ciphertext min size")
-	}
-
-	return bytes, nil
 }
 
 func (text Ciphertext) Nonce() []byte {

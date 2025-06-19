@@ -1,7 +1,5 @@
 package crypt
 
-import "github.com/binary-soup/go-command/util"
-
 const (
 	HASH_SIZE   = 60
 	SALT_SIZE   = 16
@@ -20,14 +18,6 @@ func NewHeader(hash, salt []byte) Header {
 	copy(header.Salt(), salt)
 
 	return header
-}
-
-func LoadHeader(bytes []byte) (Header, error) {
-	if len(bytes) < HEADER_SIZE {
-		return nil, util.Error("data too short to contain header")
-	}
-
-	return bytes[:HEADER_SIZE], nil
 }
 
 func (header Header) Hash() []byte {
