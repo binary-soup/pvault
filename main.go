@@ -21,6 +21,7 @@ func main() {
 		cmd.NewSearchCommand(),
 		cmd.NewImportCommand(),
 		cmd.NewGenPasswordCommand(),
+		cmd.NewSyncCommand(),
 	)
 
 	if *ls || len(os.Args) < 2 {
