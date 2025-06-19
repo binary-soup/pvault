@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 	"passwords/data"
+	"passwords/tools"
 	vw "passwords/workflows/vault"
 
-	"github.com/atotto/clipboard"
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
 	"github.com/binary-soup/go-command/util"
@@ -52,28 +52,19 @@ func (cmd CopyCommand) Run(args []string) error {
 	field := ""
 	if *u {
 		field = "USERNAME"
-		err = cmd.copyToClipboard(password.Username)
+		err = tools.CopyToClipboard(password.Username)
 	} else if *url {
 		field = "URL"
-		err = cmd.copyToClipboard(password.URL)
+		err = tools.CopyToClipboard(password.URL)
 	} else if *p {
 		field = "PASSWORD"
-		err = cmd.copyToClipboard(password.Password)
+		err = tools.CopyToClipboard(password.Password)
 	}
 
 	if err != nil {
-		return util.ChainError(err, "error copying to clipboard")
+		return err
 	}
 
 	fmt.Printf("%s.%s -> %s\n", NAME_STYLE.FormatF("\"%s\"", name), style.BoldUnderline.Format(field), style.BoldInfo.Format("Copied to Clipboard"))
-	return nil
-}
-
-func (CopyCommand) copyToClipboard(text string) error {
-	err := clipboard.WriteAll(text)
-	if err != nil {
-		return util.ChainError(err, "error copying to clipboard")
-	}
-
 	return nil
 }

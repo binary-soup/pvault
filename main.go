@@ -20,6 +20,7 @@ func main() {
 		cmd.NewCopyCommand(),
 		cmd.NewSearchCommand(),
 		cmd.NewImportCommand(),
+		cmd.NewGenPasswordCommand(),
 	)
 
 	if *ls || len(os.Args) < 2 {
