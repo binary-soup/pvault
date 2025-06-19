@@ -1,33 +1,26 @@
 package vault
 
 import (
-	"fmt"
+	"crypto/sha256"
+	"encoding/base64"
 	"os"
 	"path/filepath"
 
 	"github.com/binary-soup/go-command/util"
-	"github.com/google/uuid"
 )
 
 func (v Vault) SaveData(bytes []byte, name string) error {
-	id := uuid.New()
-
-	err := os.WriteFile(v.filepath(id), bytes, 0600)
+	err := os.WriteFile(v.filepath(name), bytes, 0600)
 	if err != nil {
 		return util.ChainError(err, "error saving file to vault")
 	}
 
-	v.index[name] = id
+	v.index.Add(name)
 	return nil
 }
 
 func (v Vault) ReadData(name string) ([]byte, error) {
-	id, err := v.getID(name)
-	if err != nil {
-		return nil, err
-	}
-
-	bytes, err := os.ReadFile(v.filepath(id))
+	bytes, err := os.ReadFile(v.filepath(name))
 	if err != nil {
 		return nil, util.ChainError(err, "error reading file from vault")
 	}
@@ -36,28 +29,16 @@ func (v Vault) ReadData(name string) ([]byte, error) {
 }
 
 func (v Vault) DeleteData(name string) error {
-	id, err := v.getID(name)
-	if err != nil {
-		return err
-	}
-
-	err = os.Remove(v.filepath(id))
+	err := os.Remove(v.filepath(name))
 	if err != nil {
 		return util.ChainError(err, "error deleting file from vault")
 	}
 
-	delete(v.index, name)
+	v.index.Delete(name)
 	return nil
 }
 
-func (v Vault) filepath(id uuid.UUID) string {
-	return filepath.Join(v.Path, id.String()+".crypt")
-}
-
-func (v Vault) getID(name string) (uuid.UUID, error) {
-	id, ok := v.index[name]
-	if !ok {
-		return uuid.Nil, util.Error(fmt.Sprintf("name \"%s\" not found", name))
-	}
-	return id, nil
+func (v Vault) filepath(name string) string {
+	hash := sha256.Sum256([]byte(name))
+	return filepath.Join(v.Path, base64.RawURLEncoding.EncodeToString(hash[:])+".crypt")
 }

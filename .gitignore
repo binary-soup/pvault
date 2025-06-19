@@ -2,3 +2,5 @@
 temp
 passwords
 config.json
+prod.sh
+config.prod.json

@@ -4,15 +4,12 @@ import (
 	"os"
 
 	"github.com/binary-soup/go-command/util"
-	"github.com/google/uuid"
 )
-
-type indexMap map[string]uuid.UUID
 
 type Vault struct {
 	Path string `json:"path"`
 
-	index indexMap
+	index stringSet
 }
 
 func (v *Vault) Open() error {
