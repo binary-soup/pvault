@@ -31,7 +31,7 @@ func (v VaultWorkflow) Encrypt(password *data.Password, passkey string) error {
 		return err
 	}
 
-	return v.Vault.SaveData(c.Header, ciphertext, password.Name)
+	return v.Vault.CreateData(c.Header, ciphertext, password.Name)
 }
 
 func (v VaultWorkflow) Decrypt(name string, timeout float32) (*data.Password, string, error) {

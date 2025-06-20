@@ -9,7 +9,7 @@ import (
 type Vault struct {
 	Path string `json:"path"`
 
-	index stringSet
+	index indexMap
 }
 
 func (v *Vault) Open() error {
