@@ -28,13 +28,13 @@ func (w ClientWorkflow) Run(addr string) error {
 		return err
 	}
 
-	conn.SendSecureMessage("hostname", crt, []byte(hostname()))
+	conn.SendSecureMessage("hostname", crt, []byte(Hostname()))
 
 	hostname, err := conn.ReadSecureMessage("hostname", crt)
 	if err != nil {
 		return err
 	}
-	printSuccessStatus(fmt.Sprintf("host identified as %s", style.BoldInfo.Format(string(hostname))))
+	Success.LogF("host identified as %s", style.BoldInfo.Format(string(hostname)))
 
 	return nil
 }
@@ -58,11 +58,11 @@ func (w ClientWorkflow) authenticate(conn *sync.Connection) (*crypt.Crypt, error
 
 		status, err := conn.ReadResponse()
 		if status == sync.ERROR_NONE {
-			printSuccessStatus("passkey accepted")
+			Success.Log("passkey accepted")
 			return crt, nil
 		}
 		if status == sync.ERROR_AUTH {
-			printErrorStatus(err.Error())
+			Error.Log(err)
 			continue
 		}
 		if err != nil {

@@ -37,7 +37,7 @@ func (w HostWorkflow) Run() error {
 		if terminate {
 			return err
 		}
-		printErrorStatus(err.Error())
+		Error.Log(err)
 	}
 }
 
@@ -49,14 +49,14 @@ func (w HostWorkflow) accept(conn *sync.Connection, passkey string) (bool, error
 		return true, err
 	}
 
-	conn.SendSecureMessage("hostname", crt, []byte(hostname()))
+	conn.SendSecureMessage("hostname", crt, []byte(Hostname()))
 
 	hostname, err := conn.ReadSecureMessage("hostname", crt)
 	if err != nil {
 		conn.SendClientError("error reading hostname message")
 		return false, err
 	}
-	printSuccessStatus(fmt.Sprintf("client identified as %s", style.BoldInfo.Format(string(hostname))))
+	Success.LogF("client identified as %s", style.BoldInfo.Format(string(hostname)))
 
 	return true, nil
 }
@@ -74,7 +74,7 @@ func (w HostWorkflow) authenticate(conn *sync.Connection, passkey string) (*cryp
 
 		c, invalidPasskey, err = crypt.LoadCrypt(passkey, header)
 		if invalidPasskey {
-			printErrorStatus("invalid client passkey")
+			Error.Log("invalid client passkey")
 			conn.SendAuthError("invalid passkey")
 			continue
 		}
@@ -83,8 +83,9 @@ func (w HostWorkflow) authenticate(conn *sync.Connection, passkey string) (*cryp
 			return nil, true, util.ChainError(err, "error creating crypt object")
 		}
 
-		printSuccessStatus("client authenticated")
 		conn.SendSuccess()
+		Success.Log("client authenticated")
+
 		return c, false, nil
 	}
 }
