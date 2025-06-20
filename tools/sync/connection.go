@@ -22,6 +22,10 @@ func (c Connection) Close() {
 	c.conn.Close()
 }
 
+func (c Connection) RemoteAddress() string {
+	return c.conn.RemoteAddr().String()
+}
+
 func (c Connection) SendMessage(name string, message []byte) error {
 	length := make([]byte, 4)
 	binary.BigEndian.PutUint32(length, uint32(len(message)))

@@ -1,6 +1,7 @@
 package sw
 
 import (
+	"fmt"
 	"passwords/crypt"
 	"passwords/tools"
 	"passwords/tools/sync"
@@ -10,13 +11,6 @@ import (
 )
 
 func (w SyncWorkflow) RunClient(addr string) error {
-	const MESSAGE = "This is a test message."
-
-	passkey, err := tools.ReadPasskey("Enter Host")
-	if err != nil {
-		return err
-	}
-
 	client := sync.NewClient()
 
 	conn, err := client.Connect(addr)
@@ -25,28 +19,61 @@ func (w SyncWorkflow) RunClient(addr string) error {
 	}
 	defer conn.Close()
 
-	c, err := crypt.NewCrypt(passkey)
+	fmt.Printf("Connected to %s\n", style.BoldInfo.Format(conn.RemoteAddress()))
+
+	c, err := w.authenticateWithHost(conn)
 	if err != nil {
-		return util.ChainError(err, "error creating crypt object")
+		return err
 	}
 
-	ciphertext := c.Encrypt([]byte(MESSAGE))
-
-	err = conn.SendMessage("header", c.Header)
-	if err != nil {
-		return nil
-	}
+	ciphertext := c.Encrypt([]byte("This is a test message"))
 
 	err = conn.SendMessage("ciphertext", ciphertext)
 	if err != nil {
 		return nil
 	}
 
-	err = conn.ReadResponse()
+	_, err = conn.ReadResponse()
 	if err != nil {
-		return util.ChainError(err, "error from host")
+		return w.newHostError(err)
 	}
 
-	style.BoldSuccess.Println("Success!")
+	w.printSuccessStatus("message received")
 	return nil
+}
+
+func (w SyncWorkflow) authenticateWithHost(conn *sync.Connection) (*crypt.Crypt, error) {
+	for {
+		passkey, err := tools.ReadPasskey("Enter Host")
+		if err != nil {
+			return nil, err
+		}
+
+		c, err := crypt.NewCrypt(passkey)
+		if err != nil {
+			return nil, util.ChainError(err, "error creating crypt object")
+		}
+
+		err = conn.SendMessage("header", c.Header)
+		if err != nil {
+			return nil, err
+		}
+
+		status, err := conn.ReadResponse()
+		if status == sync.ERROR_NONE {
+			w.printSuccessStatus("passkey accepted")
+			return c, nil
+		}
+		if status == sync.ERROR_AUTH {
+			w.printErrorStatus(err.Error())
+			continue
+		}
+		if err != nil {
+			return nil, w.newHostError(err)
+		}
+	}
+}
+
+func (w SyncWorkflow) newHostError(err error) error {
+	return util.ChainError(err, "error from host")
 }

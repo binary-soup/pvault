@@ -33,7 +33,7 @@ func (w SyncWorkflow) RunHost() error {
 
 		retry, err := w.acceptHost(conn, passkey)
 		if retry {
-			fmt.Printf("  %s %s\n", style.BoldError.Format("[X]"), err.Error())
+			w.printErrorStatus(err.Error())
 			continue
 		}
 		return err
@@ -41,20 +41,11 @@ func (w SyncWorkflow) RunHost() error {
 }
 
 func (w SyncWorkflow) acceptHost(conn *sync.Connection, passkey string) (bool, error) {
-	header, err := conn.ReadMessage("header")
-	if err != nil {
-		conn.SendClientError("error reading crypt header message")
-		return true, err
-	}
+	fmt.Printf("Connected with %s\n", style.BoldInfo.Format(conn.RemoteAddress()))
 
-	c, invalidPasskey, err := crypt.LoadCrypt(passkey, header)
-	if invalidPasskey {
-		conn.SendClientError("invalid passkey")
-		return true, util.Error("invalid client passkey")
-	}
-	if err != nil {
-		conn.SendInternalError()
-		return false, util.ChainError(err, "error creating crypt object")
+	c, retry, err := w.authenticateClient(conn, passkey)
+	if retry {
+		return true, err
 	}
 
 	ciphertext, err := conn.ReadMessage("ciphertext")
@@ -69,8 +60,44 @@ func (w SyncWorkflow) acceptHost(conn *sync.Connection, passkey string) (bool, e
 		return true, util.ChainError(err, "error decrypting ciphertext")
 	}
 
-	fmt.Printf("%s: \"%s\"\n", style.Bolded.Format("MESSAGE"), string(plaintext))
+	w.printSuccessStatus(fmt.Sprintf("%s: \"%s\"", style.Bolded.Format("MESSAGE"), string(plaintext)))
 	conn.SendSuccess()
 
 	return false, nil
+}
+
+func (w SyncWorkflow) authenticateClient(conn *sync.Connection, passkey string) (*crypt.Crypt, bool, error) {
+	var c *crypt.Crypt
+	var invalidPasskey bool
+
+	for {
+		header, err := conn.ReadMessage("header")
+		if err != nil {
+			conn.SendClientError("error reading crypt header message")
+			return nil, true, err
+		}
+
+		c, invalidPasskey, err = crypt.LoadCrypt(passkey, header)
+		if invalidPasskey {
+			w.printErrorStatus("invalid client passkey")
+			err := conn.SendAuthError("invalid passkey")
+			if err != nil {
+				return nil, true, util.ChainError(err, "error sending auth error")
+			}
+			continue
+		}
+		if err != nil {
+			conn.SendInternalError()
+			return nil, false, util.ChainError(err, "error creating crypt object")
+		}
+		break
+	}
+
+	w.printSuccessStatus("client authenticated")
+	err := conn.SendSuccess()
+	if err != nil {
+		return nil, true, err
+	}
+
+	return c, false, nil
 }

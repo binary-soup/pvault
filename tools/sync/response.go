@@ -9,6 +9,7 @@ import (
 const (
 	ERROR_NONE     = iota
 	ERROR_CLIENT   = iota
+	ERROR_AUTH     = iota
 	ERROR_INTERNAL = iota
 )
 
@@ -18,6 +19,10 @@ func (c Connection) SendSuccess() error {
 
 func (c Connection) SendClientError(message string) error {
 	return c.sendResponse(ERROR_CLIENT, message)
+}
+
+func (c Connection) SendAuthError(message string) error {
+	return c.sendResponse(ERROR_AUTH, message)
 }
 
 func (c Connection) SendInternalError() error {
@@ -36,22 +41,24 @@ func (c Connection) sendResponse(status int, message string) error {
 	return nil
 }
 
-func (c Connection) ReadResponse() error {
-	status := make([]byte, 1)
+func (c Connection) ReadResponse() (int, error) {
+	header := make([]byte, 1)
 
-	_, err := io.ReadFull(c.conn, status)
+	_, err := io.ReadFull(c.conn, header)
 	if err != nil {
-		return util.ChainError(err, "error reading response status from connection")
+		return -1, util.ChainError(err, "error reading response status from connection")
 	}
 
-	if int(status[0]) == ERROR_NONE {
-		return nil
+	status := int(header[0])
+
+	if status == ERROR_NONE {
+		return status, nil
 	}
 
 	message, err := c.ReadMessage("response")
 	if err != nil {
-		return err
+		return status, err
 	}
 
-	return util.Error(string(message))
+	return status, util.Error(string(message))
 }
