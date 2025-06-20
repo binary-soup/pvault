@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	cmdstyle "passwords/cmd/style"
 	"passwords/data"
 	vw "passwords/workflows/vault"
 	"strings"
@@ -51,7 +52,7 @@ func (cmd ImportCommand) Run(args []string) error {
 	}
 
 	for _, password := range passwords {
-		fmt.Printf("%s -> ", NAME_STYLE.Format(password.Name))
+		fmt.Printf("%s -> ", cmdstyle.NAME_STYLE.Format(password.Name))
 
 		err = cmd.savePassword(workflow, password, passkey)
 		if err != nil {
@@ -66,11 +67,11 @@ func (cmd ImportCommand) Run(args []string) error {
 }
 
 func (cmd ImportCommand) savePassword(workflow vw.VaultWorkflow, password *data.Password, passkey string) error {
-	if workflow.Vault.NameExists(password.Name) {
+	if workflow.Vault.Index.NameExists(password.Name) {
 		return util.Error(fmt.Sprintf("name \"%s\" already exists", password.Name))
 	}
 
-	return workflow.Encrypt(password, passkey)
+	return workflow.Encrypt(password, data.NewPasswordCache(passkey))
 }
 
 func (cmd ImportCommand) loadImportCSV(path string) ([]*data.Password, error) {

@@ -1,7 +1,6 @@
 package vault
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"passwords/crypt"
@@ -11,9 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (v Vault) CreateData(header crypt.Header, ciphertext crypt.Ciphertext, name string) error {
-	id := uuid.New()
-
+func (v Vault) SaveData(header crypt.Header, ciphertext crypt.Ciphertext, id uuid.UUID, name string) error {
 	file, err := os.Create(v.filepath(id))
 	if err != nil {
 		return util.ChainError(err, "error creating vault file")
@@ -30,19 +27,19 @@ func (v Vault) CreateData(header crypt.Header, ciphertext crypt.Ciphertext, name
 		return util.ChainError(err, "error writing ciphertext to vault")
 	}
 
-	v.index[name] = id
+	v.Index.AddPair(name, id)
 	return nil
 }
 
-func (v Vault) ReadData(name string) ([]byte, []byte, error) {
-	id, err := v.getID(name)
+func (v Vault) ReadData(name string) ([]byte, []byte, uuid.UUID, error) {
+	id, err := v.Index.GetID(name)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, uuid.Nil, err
 	}
 
 	file, err := os.Open(v.filepath(id))
 	if err != nil {
-		return nil, nil, util.ChainError(err, "error opening vault file")
+		return nil, nil, id, util.ChainError(err, "error opening vault file")
 	}
 	defer file.Close()
 
@@ -50,19 +47,19 @@ func (v Vault) ReadData(name string) ([]byte, []byte, error) {
 
 	_, err = file.Read(header)
 	if err != nil {
-		return nil, nil, util.ChainError(err, "error reading header from vault")
+		return nil, nil, id, util.ChainError(err, "error reading header from vault")
 	}
 
 	ciphertext, err := io.ReadAll(file)
 	if err != nil {
-		return nil, nil, util.ChainError(err, "error reading ciphertext from vault")
+		return nil, nil, id, util.ChainError(err, "error reading ciphertext from vault")
 	}
 
-	return header, ciphertext, nil
+	return header, ciphertext, id, nil
 }
 
 func (v Vault) DeleteData(name string) error {
-	id, err := v.getID(name)
+	id, err := v.Index.GetID(name)
 	if err != nil {
 		return err
 	}
@@ -72,18 +69,10 @@ func (v Vault) DeleteData(name string) error {
 		return util.ChainError(err, "error deleting file from vault")
 	}
 
-	delete(v.index, name)
+	v.Index.DeleteName(name)
 	return nil
 }
 
 func (v Vault) filepath(id uuid.UUID) string {
 	return filepath.Join(v.Path, id.String()+".crypt")
-}
-
-func (v Vault) getID(name string) (uuid.UUID, error) {
-	id, ok := v.index[name]
-	if !ok {
-		return uuid.Nil, util.Error(fmt.Sprintf("name \"%s\" not found", name))
-	}
-	return id, nil
 }

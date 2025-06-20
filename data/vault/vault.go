@@ -7,9 +7,8 @@ import (
 )
 
 type Vault struct {
-	Path string `json:"path"`
-
-	index indexMap
+	Path  string `json:"path"`
+	Index *Index
 }
 
 func (v *Vault) Open() error {
@@ -18,9 +17,9 @@ func (v *Vault) Open() error {
 		return util.ChainError(err, "error creating vault directory")
 	}
 
-	v.index, err = v.loadIndex()
+	v.Index, err = v.loadIndex()
 	if err != nil {
-		return util.ChainError(err, "error loading index map")
+		return util.ChainError(err, "error loading index")
 	}
 
 	return nil

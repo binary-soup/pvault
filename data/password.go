@@ -5,14 +5,28 @@ import (
 	"passwords/crypt"
 
 	"github.com/binary-soup/go-command/util"
+	"github.com/google/uuid"
 )
 
 type Password struct {
-	Name          string   `json:"name"`
-	Password      string   `json:"password"`
-	Username      string   `json:"username,omitempty"`
-	URL           string   `json:"url,omitempty"`
-	RecoveryCodes []string `json:"recovery_codes,omitempty"`
+	Name          string         `json:"name"`
+	Password      string         `json:"password"`
+	Username      string         `json:"username,omitempty"`
+	URL           string         `json:"url,omitempty"`
+	RecoveryCodes []string       `json:"recovery_codes,omitempty"`
+	Cache         *PasswordCache `json:"cache,omitempty"`
+}
+
+type PasswordCache struct {
+	Passkey string    `json:"passkey"`
+	ID      uuid.UUID `json:"uuid"`
+}
+
+func NewPasswordCache(passkey string) *PasswordCache {
+	return &PasswordCache{
+		Passkey: passkey,
+		ID:      uuid.New(),
+	}
 }
 
 func LoadPasswordFile(path string) (*Password, error) {

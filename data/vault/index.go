@@ -13,11 +13,57 @@ import (
 
 const INDEX_FILE = "index.txt"
 
-type indexMap map[string]uuid.UUID
+type Index struct {
+	nameMap map[string]uuid.UUID
+	uuidMap map[uuid.UUID]string
+}
 
-func (v Vault) NameExists(name string) bool {
-	_, ok := v.index[name]
+func newIndex() *Index {
+	return &Index{
+		nameMap: map[string]uuid.UUID{},
+		uuidMap: map[uuid.UUID]string{},
+	}
+}
+
+func (idx Index) AddPair(name string, id uuid.UUID) {
+	oldName, ok := idx.uuidMap[id]
+	if ok && oldName != name {
+		delete(idx.nameMap, oldName)
+	}
+
+	idx.nameMap[name] = id
+	idx.uuidMap[id] = name
+}
+
+func (idx Index) NameExists(name string) bool {
+	_, ok := idx.nameMap[name]
 	return ok
+}
+
+func (idx Index) IdExists(id uuid.UUID) bool {
+	_, ok := idx.uuidMap[id]
+	return ok
+}
+
+func (idx Index) GetID(name string) (uuid.UUID, error) {
+	id, ok := idx.nameMap[name]
+	if !ok {
+		return uuid.Nil, util.Error(fmt.Sprintf("name \"%s\" not found", name))
+	}
+	return id, nil
+}
+
+func (idx Index) DeleteName(name string) {
+	id := idx.nameMap[name]
+
+	delete(idx.nameMap, name)
+	delete(idx.uuidMap, id)
+}
+
+func (idx Index) Iterate(itr func(string, uuid.UUID)) {
+	for name, id := range idx.nameMap {
+		itr(name, id)
+	}
 }
 
 func (v Vault) saveIndex() error {
@@ -27,23 +73,24 @@ func (v Vault) saveIndex() error {
 	}
 	defer file.Close()
 
-	for name, id := range v.index {
+	v.Index.Iterate(func(name string, id uuid.UUID) {
 		fmt.Fprintf(file, "%s:%s\n", id.String(), name)
-	}
+	})
+
 	return nil
 }
 
-func (v Vault) loadIndex() (indexMap, error) {
+func (v Vault) loadIndex() (*Index, error) {
 	file, err := os.Open(filepath.Join(v.Path, INDEX_FILE))
 	if os.IsNotExist(err) {
-		return indexMap{}, nil
+		return newIndex(), nil
 	}
 	if err != nil {
 		return nil, util.ChainError(err, "error opening index file")
 	}
 	defer file.Close()
 
-	index := indexMap{}
+	index := newIndex()
 	line := 0
 
 	scanner := bufio.NewScanner(file)
@@ -54,7 +101,7 @@ func (v Vault) loadIndex() (indexMap, error) {
 		if err != nil {
 			return nil, err
 		}
-		index[name] = id
+		index.AddPair(name, id)
 	}
 
 	if err := scanner.Err(); err != nil {

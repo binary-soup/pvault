@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	cmdstyle "passwords/cmd/style"
 	"passwords/data"
 	"passwords/tools"
 	vw "passwords/workflows/vault"
@@ -65,6 +66,6 @@ func (cmd CopyCommand) Run(args []string) error {
 		return err
 	}
 
-	fmt.Printf("%s.%s -> %s\n", NAME_STYLE.FormatF("\"%s\"", name), style.BoldUnderline.Format(field), style.BoldInfo.Format("Copied to Clipboard"))
+	fmt.Printf("%s.%s -> %s\n", cmdstyle.NAME_STYLE.FormatF("\"%s\"", name), style.BoldUnderline.Format(field), style.BoldInfo.Format("Copied to Clipboard"))
 	return nil
 }

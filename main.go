@@ -18,6 +18,8 @@ func main() {
 		cmd.NewSearchCommand(),
 		cmd.NewStashCommand(),
 		cmd.NewWithdrawCommand(),
+		cmd.NewUnlockCommand(),
+		cmd.NewRelockCommand(),
 		cmd.NewCopyCommand(),
 		cmd.NewImportCommand(),
 		cmd.NewGenPasswordCommand(),
