@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"passwords/data"
-	"passwords/data/vault"
 	vw "passwords/workflows/vault"
 
 	"github.com/binary-soup/go-command/command"
@@ -12,18 +11,18 @@ import (
 	"github.com/binary-soup/go-command/util"
 )
 
-type LockCommand struct {
+type StashCommand struct {
 	command.CommandBase
 }
 
-func NewLockCommand() LockCommand {
-	return LockCommand{
-		CommandBase: command.NewCommandBase("lock", "encrypt the provided password file"),
+func NewStashCommand() StashCommand {
+	return StashCommand{
+		CommandBase: command.NewCommandBase("stash", "encrypt and stash in the vault"),
 	}
 }
 
-func (cmd LockCommand) Run(args []string) error {
-	name := cmd.Flags.String("n", "", "name of the password file")
+func (cmd StashCommand) Run(args []string) error {
+	path := cmd.Flags.String("p", "", "path to the password file")
 	keep := cmd.Flags.Bool("keep", false, "keep the original password file")
 	cmd.Flags.Parse(args)
 
@@ -32,11 +31,11 @@ func (cmd LockCommand) Run(args []string) error {
 		return err
 	}
 
-	if *name == "" {
-		return util.Error("(n)ame missing or invalid")
+	if *path == "" {
+		return util.Error("(p)ath missing or invalid")
 	}
 
-	password, err := data.LoadPasswordFile(*name + ".json")
+	password, err := data.LoadPasswordFile(*path)
 	if err != nil {
 		return err
 	}
@@ -50,29 +49,24 @@ func (cmd LockCommand) Run(args []string) error {
 		return util.Error(fmt.Sprintf("name \"%s\" already exists", password.Name))
 	}
 
-	cache, err := vault.LoadCacheFile(*name + ".cache.json")
-	if err != nil {
-		cache = &vault.Cache{}
-	}
-
 	workflow := vw.NewVaultWorkflow(cfg.Vault)
 	defer cfg.Vault.Close()
 
-	err = workflow.ChooseOrVerifyPasskey(&cache.Passkey)
+	var passkey string
+	err = workflow.ChooseOrVerifyPasskey(&passkey)
 	if err != nil {
 		return err
 	}
 
-	err = workflow.Encrypt(password, cache.Passkey)
+	err = workflow.Encrypt(password, passkey)
 	if err != nil {
 		return err
 	}
 
 	if !*keep {
-		os.Remove(*name + ".json")
-		os.Remove(*name + ".cache.json")
+		os.Remove(*path)
 	}
 
-	fmt.Printf("%s -> %s\n", NAME_STYLE.FormatF("\"%s\"", password.Name), style.BoldInfo.Format("Saved to Vault"))
+	fmt.Printf("%s -> %s\n", NAME_STYLE.FormatF("\"%s\"", password.Name), style.BoldInfo.Format("Stashed in Vault"))
 	return nil
 }

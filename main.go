@@ -15,10 +15,10 @@ func main() {
 	flag.Parse()
 
 	runner := command.NewRunner(
-		cmd.NewLockCommand(),
-		cmd.NewUnlockCommand(),
-		cmd.NewCopyCommand(),
 		cmd.NewSearchCommand(),
+		cmd.NewStashCommand(),
+		cmd.NewWithdrawCommand(),
+		cmd.NewCopyCommand(),
 		cmd.NewImportCommand(),
 		cmd.NewGenPasswordCommand(),
 		cmd.NewSyncCommand(),
