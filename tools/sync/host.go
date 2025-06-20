@@ -27,7 +27,7 @@ func (h *Host) Start() error {
 		return util.ChainError(err, "error starting host tcp server")
 	}
 
-	fmt.Printf("Listening on port %s\n", style.BoldInfo.Format(h.Port))
+	fmt.Printf("Listening on port %s\n", style.BoldInfo.Format(h.Port[1:]))
 	return nil
 }
 

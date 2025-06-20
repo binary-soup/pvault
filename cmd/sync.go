@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	sw "pvault/workflows/sync"
+	syncworkflow "pvault/workflows/sync"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/util"
@@ -22,15 +22,13 @@ func (cmd SyncCommand) Run(args []string) error {
 	addr := cmd.Flags.String("addr", "", "address of the host to sync to")
 	cmd.Flags.Parse(args)
 
-	workflow := sw.NewSyncWorkflow()
-
 	if *host {
-		return workflow.RunHost()
+		return syncworkflow.HostWorkflow{}.Run()
 	}
 
 	if *addr == "" {
 		return util.Error("(addr)ess missing or empty")
 	}
 
-	return workflow.RunClient(*addr)
+	return syncworkflow.ClientWorkflow{}.Run(*addr)
 }

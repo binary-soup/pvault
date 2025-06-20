@@ -1,4 +1,4 @@
-package sw
+package syncworkflow
 
 import (
 	"fmt"
@@ -10,7 +10,9 @@ import (
 	"github.com/binary-soup/go-command/util"
 )
 
-func (w SyncWorkflow) RunHost() error {
+type HostWorkflow struct{}
+
+func (w HostWorkflow) Run() error {
 	passkey, err := tools.ReadAndVerifyPasskey("Choose Host")
 	if err != nil {
 		return err
@@ -31,42 +33,35 @@ func (w SyncWorkflow) RunHost() error {
 		}
 		defer conn.Close()
 
-		retry, err := w.acceptHost(conn, passkey)
-		if retry {
-			w.printErrorStatus(err.Error())
-			continue
+		terminate, err := w.accept(conn, passkey)
+		if terminate {
+			return err
 		}
-		return err
+		printErrorStatus(err.Error())
 	}
 }
 
-func (w SyncWorkflow) acceptHost(conn *sync.Connection, passkey string) (bool, error) {
+func (w HostWorkflow) accept(conn *sync.Connection, passkey string) (bool, error) {
 	fmt.Printf("Connected with %s\n", style.BoldInfo.Format(conn.RemoteAddress()))
 
-	c, retry, err := w.authenticateClient(conn, passkey)
-	if retry {
+	crt, abort, err := w.authenticate(conn, passkey)
+	if abort {
 		return true, err
 	}
 
-	ciphertext, err := conn.ReadMessage("ciphertext")
+	conn.SendSecureMessage("hostname", crt, []byte(hostname()))
+
+	hostname, err := conn.ReadSecureMessage("hostname", crt)
 	if err != nil {
-		conn.SendClientError("error reading ciphertext message")
-		return true, err
+		conn.SendClientError("error reading hostname message")
+		return false, err
 	}
+	printSuccessStatus(fmt.Sprintf("client identified as %s", style.BoldInfo.Format(string(hostname))))
 
-	plaintext, err := c.Decrypt(ciphertext)
-	if err != nil {
-		conn.SendClientError("error decrypting ciphertext")
-		return true, util.ChainError(err, "error decrypting ciphertext")
-	}
-
-	w.printSuccessStatus(fmt.Sprintf("%s: \"%s\"", style.Bolded.Format("MESSAGE"), string(plaintext)))
-	conn.SendSuccess()
-
-	return false, nil
+	return true, nil
 }
 
-func (w SyncWorkflow) authenticateClient(conn *sync.Connection, passkey string) (*crypt.Crypt, bool, error) {
+func (w HostWorkflow) authenticate(conn *sync.Connection, passkey string) (*crypt.Crypt, bool, error) {
 	var c *crypt.Crypt
 	var invalidPasskey bool
 
@@ -74,30 +69,22 @@ func (w SyncWorkflow) authenticateClient(conn *sync.Connection, passkey string) 
 		header, err := conn.ReadMessage("header")
 		if err != nil {
 			conn.SendClientError("error reading crypt header message")
-			return nil, true, err
+			return nil, false, err
 		}
 
 		c, invalidPasskey, err = crypt.LoadCrypt(passkey, header)
 		if invalidPasskey {
-			w.printErrorStatus("invalid client passkey")
-			err := conn.SendAuthError("invalid passkey")
-			if err != nil {
-				return nil, true, util.ChainError(err, "error sending auth error")
-			}
+			printErrorStatus("invalid client passkey")
+			conn.SendAuthError("invalid passkey")
 			continue
 		}
 		if err != nil {
 			conn.SendInternalError()
-			return nil, false, util.ChainError(err, "error creating crypt object")
+			return nil, true, util.ChainError(err, "error creating crypt object")
 		}
-		break
-	}
 
-	w.printSuccessStatus("client authenticated")
-	err := conn.SendSuccess()
-	if err != nil {
-		return nil, true, err
+		printSuccessStatus("client authenticated")
+		conn.SendSuccess()
+		return c, false, nil
 	}
-
-	return c, false, nil
 }

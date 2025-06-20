@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
+	"pvault/crypt"
 
 	"github.com/binary-soup/go-command/util"
 )
@@ -43,6 +44,10 @@ func (c Connection) SendMessage(name string, message []byte) error {
 	return nil
 }
 
+func (c Connection) SendSecureMessage(name string, crt *crypt.Crypt, message []byte) error {
+	return c.SendMessage(name, crt.Encrypt(message))
+}
+
 func (c Connection) ReadMessage(name string) ([]byte, error) {
 	length := make([]byte, 4)
 
@@ -59,4 +64,18 @@ func (c Connection) ReadMessage(name string) ([]byte, error) {
 	}
 
 	return message, nil
+}
+
+func (c Connection) ReadSecureMessage(name string, crt *crypt.Crypt) ([]byte, error) {
+	message, err := c.ReadMessage(name)
+	if err != nil {
+		return nil, err
+	}
+
+	plaintext, err := crt.Decrypt(message)
+	if err != nil {
+		return nil, util.ChainErrorF(err, "error decrypting %s from connection", name)
+	}
+
+	return plaintext, nil
 }
