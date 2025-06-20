@@ -3,9 +3,9 @@ package cmdworkflow
 import (
 	"fmt"
 	"os"
-	cmdstyle "passwords/cmd/style"
-	"passwords/data"
-	vw "passwords/workflows/vault"
+	cmdstyle "pvault/cmd/style"
+	"pvault/data"
+	vw "pvault/workflows/vault"
 
 	"github.com/binary-soup/go-command/style"
 	"github.com/binary-soup/go-command/util"

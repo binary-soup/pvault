@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	cmdworkflow "passwords/cmd/workflow"
+	cmdworkflow "pvault/cmd/workflow"
 
 	"github.com/binary-soup/go-command/command"
 )

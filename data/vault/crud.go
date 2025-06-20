@@ -3,8 +3,8 @@ package vault
 import (
 	"io"
 	"os"
-	"passwords/crypt"
 	"path/filepath"
+	"pvault/crypt"
 
 	"github.com/binary-soup/go-command/util"
 	"github.com/google/uuid"

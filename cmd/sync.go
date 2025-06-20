@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	sw "passwords/workflows/sync"
+	sw "pvault/workflows/sync"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/util"

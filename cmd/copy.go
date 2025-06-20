@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	cmdstyle "passwords/cmd/style"
-	"passwords/data"
-	"passwords/tools"
-	vw "passwords/workflows/vault"
+	cmdstyle "pvault/cmd/style"
+	"pvault/data"
+	"pvault/tools"
+	vw "pvault/workflows/vault"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"

@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	cmdstyle "passwords/cmd/style"
-	"passwords/data"
-	vw "passwords/workflows/vault"
+	cmdstyle "pvault/cmd/style"
+	"pvault/data"
+	vw "pvault/workflows/vault"
 	"strings"
 
 	"github.com/binary-soup/go-command/command"

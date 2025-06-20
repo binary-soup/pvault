@@ -2,8 +2,8 @@ package vw
 
 import (
 	"fmt"
-	"passwords/data/vault"
-	"passwords/tools"
+	"pvault/data/vault"
+	"pvault/tools"
 
 	"github.com/binary-soup/go-command/style"
 	"github.com/binary-soup/go-command/util"

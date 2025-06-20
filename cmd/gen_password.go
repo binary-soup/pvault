@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"passwords/crypt"
-	"passwords/tools"
+	"pvault/crypt"
+	"pvault/tools"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"

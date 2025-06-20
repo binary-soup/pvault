@@ -2,9 +2,9 @@ package sw
 
 import (
 	"fmt"
-	"passwords/crypt"
-	"passwords/tools"
-	"passwords/tools/sync"
+	"pvault/crypt"
+	"pvault/tools"
+	"pvault/tools/sync"
 
 	"github.com/binary-soup/go-command/style"
 	"github.com/binary-soup/go-command/util"

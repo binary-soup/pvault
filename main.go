@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"passwords/cmd"
+	"pvault/cmd"
 
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"

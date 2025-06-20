@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"passwords/data"
-	vw "passwords/workflows/vault"
+	"pvault/data"
+	vw "pvault/workflows/vault"
 
 	"github.com/binary-soup/go-command/command"
 )

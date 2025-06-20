@@ -1,6 +1,6 @@
 package vw
 
-import "passwords/data/vault"
+import "pvault/data/vault"
 
 type VaultWorkflow struct {
 	Vault vault.Vault

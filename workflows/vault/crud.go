@@ -1,9 +1,9 @@
 package vw
 
 import (
-	"passwords/crypt"
-	"passwords/data"
-	"passwords/tools"
+	"pvault/crypt"
+	"pvault/data"
+	"pvault/tools"
 
 	"github.com/binary-soup/go-command/util"
 )

@@ -2,7 +2,7 @@ package data
 
 import (
 	"encoding/json"
-	"passwords/crypt"
+	"pvault/crypt"
 
 	"github.com/binary-soup/go-command/util"
 	"github.com/google/uuid"

@@ -1,6 +1,6 @@
 .vscode
 temp
-passwords
+pvault
 config.json
 prod.sh
 config.prod.json

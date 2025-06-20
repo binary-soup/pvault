@@ -2,8 +2,8 @@ package data
 
 import (
 	"os"
-	"passwords/data/vault"
 	"path/filepath"
+	"pvault/data/vault"
 
 	"github.com/binary-soup/go-command/util"
 )

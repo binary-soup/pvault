@@ -1,4 +1,4 @@
-module passwords
+module pvault
 
 go 1.24
 
