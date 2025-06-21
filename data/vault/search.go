@@ -15,7 +15,7 @@ type SearchItem struct {
 func (v Vault) Search(substring string) []SearchItem {
 	items := []SearchItem{}
 
-	v.Index.Iterate(func(name string, _ uuid.UUID) {
+	v.Index.Iterate(func(_ int, name string, _ uuid.UUID) {
 		if substring == "" {
 			items = append(items, v.newSearchItem(name, 0, 0))
 		} else if idx := strings.Index(strings.ToLower(name), strings.ToLower(substring)); idx >= 0 {

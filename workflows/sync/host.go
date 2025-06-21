@@ -3,14 +3,24 @@ package syncworkflow
 import (
 	"fmt"
 	"pvault/crypt"
+	"pvault/data/vault"
 	"pvault/tools"
 	"pvault/tools/sync"
 
 	"github.com/binary-soup/go-command/style"
 	"github.com/binary-soup/go-command/util"
+	"github.com/google/uuid"
 )
 
-type HostWorkflow struct{}
+type HostWorkflow struct {
+	Vault vault.Vault
+}
+
+func NewHostWorkflow(v vault.Vault) HostWorkflow {
+	return HostWorkflow{
+		Vault: v,
+	}
+}
 
 func (w HostWorkflow) Run() error {
 	passkey, err := tools.ReadAndVerifyPasskey("Choose Host")
@@ -55,14 +65,8 @@ func (w HostWorkflow) accept(conn *sync.Connection, passkey string) (bool, error
 		return abort, err
 	}
 
-	msg, err := conn.ReadSecureMessage("test", crt)
-	if err != nil {
-		conn.SendClientError("error reading test message")
-		return false, err
-	}
-
-	successLog.Log(string(msg))
-	conn.SendSuccess()
+	conn.SendManyMessages("vault list", crt, w.buildVaultList())
+	successLog.Log("sent vault list")
 
 	return true, nil
 }
@@ -94,4 +98,14 @@ func (w HostWorkflow) authenticate(conn *sync.Connection, passkey string) (*cryp
 
 		return c, false, nil
 	}
+}
+
+func (w HostWorkflow) buildVaultList() [][]byte {
+	items := make([][]byte, w.Vault.Index.Count())
+
+	w.Vault.Index.Iterate(func(i int, name string, id uuid.UUID) {
+		items[i] = NewVaultItem(id, name).ToBytes()
+	})
+
+	return items
 }

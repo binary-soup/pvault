@@ -25,6 +25,10 @@ func newIndex() *Index {
 	}
 }
 
+func (idx Index) Count() int {
+	return len(idx.nameMap)
+}
+
 func (idx Index) AddPair(name string, id uuid.UUID) {
 	oldName, ok := idx.uuidMap[id]
 	if ok && oldName != name {
@@ -60,9 +64,11 @@ func (idx Index) DeleteName(name string) {
 	delete(idx.uuidMap, id)
 }
 
-func (idx Index) Iterate(itr func(string, uuid.UUID)) {
+func (idx Index) Iterate(itr func(int, string, uuid.UUID)) {
+	i := 0
 	for name, id := range idx.nameMap {
-		itr(name, id)
+		itr(i, name, id)
+		i++
 	}
 }
 
@@ -73,7 +79,7 @@ func (v Vault) saveIndex() error {
 	}
 	defer file.Close()
 
-	v.Index.Iterate(func(name string, id uuid.UUID) {
+	v.Index.Iterate(func(_ int, name string, id uuid.UUID) {
 		fmt.Fprintf(file, "%s:%s\n", id.String(), name)
 	})
 

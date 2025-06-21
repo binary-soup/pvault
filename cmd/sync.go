@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"pvault/data"
 	syncworkflow "pvault/workflows/sync"
 
 	"github.com/binary-soup/go-command/command"
@@ -22,8 +23,13 @@ func (cmd SyncCommand) Run(args []string) error {
 	addr := cmd.Flags.String("addr", "", "address of the host to sync to")
 	cmd.Flags.Parse(args)
 
+	cfg, err := data.LoadConfig()
+	if err != nil {
+		return err
+	}
+
 	if *host {
-		return syncworkflow.HostWorkflow{}.Run()
+		return syncworkflow.NewHostWorkflow(cfg.Vault).Run()
 	}
 
 	if *addr == "" {

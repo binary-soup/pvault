@@ -37,10 +37,18 @@ func (w ClientWorkflow) accept(conn *sync.Connection) error {
 		return err
 	}
 
-	conn.SendSecureMessage("test", crt, []byte("this is a test"))
-	_, err = conn.ReadResponse()
+	successLog.Log("receiving vault list")
+	err = conn.ReadManyMessages("vault list", crt, func(bytes []byte) error {
+		item, err := ParseVaultItemFromBytes(bytes)
+		if err != nil {
+			return util.ChainError(err, "error parsing vault item from vault list")
+		}
+
+		fmt.Printf("%s \"%s\"\n", item.ID.String(), item.Name)
+		return nil
+	})
 	if err != nil {
-		return w.hostError(err)
+		return err
 	}
 
 	return nil
