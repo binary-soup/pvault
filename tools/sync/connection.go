@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
+	"os"
 	"pvault/crypt"
 
 	"github.com/binary-soup/go-command/util"
@@ -25,6 +26,14 @@ func (c Connection) Close() {
 
 func (c Connection) RemoteAddress() string {
 	return c.conn.RemoteAddr().String()
+}
+
+func (c Connection) ExchangeHostname() (string, error) {
+	hostname, _ := os.Hostname()
+	c.SendMessage("hostname", []byte(hostname))
+
+	bytes, err := c.ReadMessage("hostname")
+	return string(bytes), err
 }
 
 func (c Connection) SendMessage(name string, message []byte) error {

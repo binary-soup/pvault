@@ -33,30 +33,36 @@ func (w HostWorkflow) Run() error {
 		}
 		defer conn.Close()
 
+		fmt.Printf("Connected with %s\n", style.BoldInfo.Format(conn.RemoteAddress()))
+
 		terminate, err := w.accept(conn, passkey)
 		if terminate {
 			return err
 		}
-		Error.Log(err)
+		errorLog.Log(err)
 	}
 }
 
 func (w HostWorkflow) accept(conn *sync.Connection, passkey string) (bool, error) {
-	fmt.Printf("Connected with %s\n", style.BoldInfo.Format(conn.RemoteAddress()))
-
-	crt, abort, err := w.authenticate(conn, passkey)
-	if abort {
-		return true, err
-	}
-
-	conn.SendSecureMessage("hostname", crt, []byte(Hostname()))
-
-	hostname, err := conn.ReadSecureMessage("hostname", crt)
+	hostname, err := conn.ExchangeHostname()
 	if err != nil {
-		conn.SendClientError("error reading hostname message")
 		return false, err
 	}
-	Success.LogF("client identified as %s", style.BoldInfo.Format(string(hostname)))
+	successLog.LogF("client identified as %s", style.BoldInfo.Format(string(hostname)))
+
+	crt, abort, err := w.authenticate(conn, passkey)
+	if err != nil {
+		return abort, err
+	}
+
+	msg, err := conn.ReadSecureMessage("test", crt)
+	if err != nil {
+		conn.SendClientError("error reading test message")
+		return false, err
+	}
+
+	successLog.Log(string(msg))
+	conn.SendSuccess()
 
 	return true, nil
 }
@@ -74,7 +80,7 @@ func (w HostWorkflow) authenticate(conn *sync.Connection, passkey string) (*cryp
 
 		c, invalidPasskey, err = crypt.LoadCrypt(passkey, header)
 		if invalidPasskey {
-			Error.Log("invalid client passkey")
+			errorLog.Log("invalid client passkey")
 			conn.SendAuthError("invalid passkey")
 			continue
 		}
@@ -84,7 +90,7 @@ func (w HostWorkflow) authenticate(conn *sync.Connection, passkey string) (*cryp
 		}
 
 		conn.SendSuccess()
-		Success.Log("client authenticated")
+		successLog.Log("client authenticated")
 
 		return c, false, nil
 	}

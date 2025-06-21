@@ -22,19 +22,26 @@ func (w ClientWorkflow) Run(addr string) error {
 	defer conn.Close()
 
 	fmt.Printf("Connected to %s\n", style.BoldInfo.Format(conn.RemoteAddress()))
+	return w.accept(conn)
+}
+
+func (w ClientWorkflow) accept(conn *sync.Connection) error {
+	hostname, err := conn.ExchangeHostname()
+	if err != nil {
+		return err
+	}
+	successLog.LogF("host identified as %s", style.BoldInfo.Format(hostname))
 
 	crt, err := w.authenticate(conn)
 	if err != nil {
 		return err
 	}
 
-	conn.SendSecureMessage("hostname", crt, []byte(Hostname()))
-
-	hostname, err := conn.ReadSecureMessage("hostname", crt)
+	conn.SendSecureMessage("test", crt, []byte("this is a test"))
+	_, err = conn.ReadResponse()
 	if err != nil {
-		return err
+		return w.hostError(err)
 	}
-	Success.LogF("host identified as %s", style.BoldInfo.Format(string(hostname)))
 
 	return nil
 }
@@ -51,18 +58,15 @@ func (w ClientWorkflow) authenticate(conn *sync.Connection) (*crypt.Crypt, error
 			return nil, util.ChainError(err, "error creating crypt object")
 		}
 
-		err = conn.SendMessage("header", crt.Header)
-		if err != nil {
-			return nil, err
-		}
+		conn.SendMessage("header", crt.Header)
 
 		status, err := conn.ReadResponse()
 		if status == sync.ERROR_NONE {
-			Success.Log("passkey accepted")
+			successLog.Log("passkey accepted")
 			return crt, nil
 		}
 		if status == sync.ERROR_AUTH {
-			Error.Log(err)
+			errorLog.Log(err)
 			continue
 		}
 		if err != nil {
