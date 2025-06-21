@@ -22,13 +22,13 @@ func NewHostWorkflow(v vault.Vault) HostWorkflow {
 	}
 }
 
-func (w HostWorkflow) Run() error {
+func (w HostWorkflow) Run(port string) error {
 	passkey, err := tools.ReadAndVerifyPasskey("Choose Host")
 	if err != nil {
 		return err
 	}
 
-	host := sync.NewHost(":9000")
+	host := sync.NewHost(port)
 
 	err = host.Start()
 	if err != nil {

@@ -12,10 +12,10 @@ import (
 
 type ClientWorkflow struct{}
 
-func (w ClientWorkflow) Run(addr string) error {
+func (w ClientWorkflow) Run(addr, port string) error {
 	client := sync.NewClient()
 
-	conn, err := client.Connect(addr)
+	conn, err := client.Connect(addr + port)
 	if err != nil {
 		return nil
 	}

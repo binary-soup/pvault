@@ -20,6 +20,7 @@ func NewSyncCommand() SyncCommand {
 
 func (cmd SyncCommand) Run(args []string) error {
 	host := cmd.Flags.Bool("host", false, "run as the host")
+	port := cmd.Flags.String("port", ":9000", "port to run with/connect to")
 	addr := cmd.Flags.String("addr", "", "address of the host to sync to")
 	cmd.Flags.Parse(args)
 
@@ -29,12 +30,12 @@ func (cmd SyncCommand) Run(args []string) error {
 	}
 
 	if *host {
-		return syncworkflow.NewHostWorkflow(cfg.Vault).Run()
+		return syncworkflow.NewHostWorkflow(cfg.Vault).Run(*port)
 	}
 
 	if *addr == "" {
 		return util.Error("(addr)ess missing or empty")
 	}
 
-	return syncworkflow.ClientWorkflow{}.Run(*addr)
+	return syncworkflow.ClientWorkflow{}.Run(*addr, *port)
 }
