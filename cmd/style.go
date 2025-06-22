@@ -1,4 +1,4 @@
-package cmdstyle
+package cmd
 
 import "github.com/binary-soup/go-command/style"
 

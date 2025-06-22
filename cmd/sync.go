@@ -1,20 +1,18 @@
 package cmd
 
 import (
-	"pvault/data"
 	syncworkflow "pvault/workflows/sync"
 
-	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/util"
 )
 
 type SyncCommand struct {
-	command.CommandBase
+	ConfigCommandBase
 }
 
 func NewSyncCommand() SyncCommand {
 	return SyncCommand{
-		CommandBase: command.NewCommandBase("sync", "sync files between a host and client vault"),
+		ConfigCommandBase: NewConfigCommandBase("sync", "sync files between a host and client vault"),
 	}
 }
 
@@ -24,7 +22,7 @@ func (cmd SyncCommand) Run(args []string) error {
 	addr := cmd.Flags.String("addr", "", "address of the host to sync to")
 	cmd.Flags.Parse(args)
 
-	cfg, err := data.LoadConfig()
+	cfg, err := cmd.LoadConfig()
 	if err != nil {
 		return err
 	}

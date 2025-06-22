@@ -19,11 +19,15 @@ type PasskeyConfig struct {
 	Timeout float32 `json:"timeout"`
 }
 
-func LoadConfig() (*Config, error) {
+func LoadBaseConfig() (*Config, error) {
 	path, _ := os.Executable()
 	path = filepath.Dir(path)
 
-	cfg, err := util.LoadJSON[Config]("config", filepath.Join(path, CONFIG_PATH))
+	return LoadCustomConfig(filepath.Join(path, CONFIG_PATH))
+}
+
+func LoadCustomConfig(path string) (*Config, error) {
+	cfg, err := util.LoadJSON[Config]("config", path)
 	if err != nil {
 		return nil, err
 	}

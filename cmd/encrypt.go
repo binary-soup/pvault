@@ -1,9 +1,8 @@
-package cmdworkflow
+package cmd
 
 import (
 	"fmt"
 	"os"
-	cmdstyle "pvault/cmd/style"
 	"pvault/data"
 	vw "pvault/workflows/vault"
 
@@ -11,12 +10,50 @@ import (
 	"github.com/binary-soup/go-command/util"
 )
 
-func (cmd CmdWorkflow) RunEncrypt(cmdName string, new bool) error {
-	path := cmd.flags.String("p", "", "path to the password file")
-	keep := cmd.flags.Bool("keep", false, "keep the original password file")
-	cmd.flags.Parse(cmd.args)
+type EncryptCommandBase struct {
+	ConfigCommandBase
+	new bool
+}
 
-	cfg, err := data.LoadConfig()
+func newEncryptCommandBase(name, desc string, new bool) EncryptCommandBase {
+	return EncryptCommandBase{
+		ConfigCommandBase: NewConfigCommandBase(name, desc),
+		new:               new,
+	}
+}
+
+//#######################
+
+type RelockCommand struct {
+	EncryptCommandBase
+}
+
+func NewRelockCommand() RelockCommand {
+	return RelockCommand{
+		EncryptCommandBase: newEncryptCommandBase("relock", "re-encrypt a file back into the vault", false),
+	}
+}
+
+//#######################
+
+type StashCommand struct {
+	EncryptCommandBase
+}
+
+func NewStashCommand() StashCommand {
+	return StashCommand{
+		EncryptCommandBase: newEncryptCommandBase("stash", "encrypt and stash a new file in the vault", true),
+	}
+}
+
+//#######################
+
+func (cmd EncryptCommandBase) Run(args []string) error {
+	path := cmd.Flags.String("p", "", "path to the password file")
+	keep := cmd.Flags.Bool("keep", false, "keep the original password file")
+	cmd.Flags.Parse(args)
+
+	cfg, err := cmd.LoadConfig()
 	if err != nil {
 		return err
 	}
@@ -37,7 +74,7 @@ func (cmd CmdWorkflow) RunEncrypt(cmdName string, new bool) error {
 
 	var cache *data.PasswordCache
 
-	if new {
+	if cmd.new {
 		if cfg.Vault.Index.NameExists(password.Name) {
 			return util.Error(fmt.Sprintf("name \"%s\" already exists", password.Name))
 		}
@@ -71,6 +108,6 @@ func (cmd CmdWorkflow) RunEncrypt(cmdName string, new bool) error {
 		os.Remove(*path)
 	}
 
-	fmt.Printf("%s -> %s\n", cmdstyle.NAME_STYLE.FormatF("\"%s\"", password.Name), style.BoldInfo.FormatF("%s in Vault", cmdName))
+	fmt.Printf("%s -> %s\n", NAME_STYLE.FormatF("\"%s\"", password.Name), style.BoldInfo.FormatF("%s in Vault", cmd.Name))
 	return nil
 }

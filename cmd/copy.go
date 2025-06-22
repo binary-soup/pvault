@@ -2,23 +2,20 @@ package cmd
 
 import (
 	"fmt"
-	cmdstyle "pvault/cmd/style"
-	"pvault/data"
 	"pvault/tools"
 	vw "pvault/workflows/vault"
 
-	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
 	"github.com/binary-soup/go-command/util"
 )
 
 type CopyCommand struct {
-	command.CommandBase
+	ConfigCommandBase
 }
 
 func NewCopyCommand() CopyCommand {
 	return CopyCommand{
-		CommandBase: command.NewCommandBase("copy", "copy password data to the clipboard"),
+		ConfigCommandBase: NewConfigCommandBase("copy", "copy password data to the clipboard"),
 	}
 }
 
@@ -29,7 +26,7 @@ func (cmd CopyCommand) Run(args []string) error {
 	p := cmd.Flags.Bool("p", true, "copy password")
 	cmd.Flags.Parse(args)
 
-	cfg, err := data.LoadConfig()
+	cfg, err := cmd.LoadConfig()
 	if err != nil {
 		return err
 	}
@@ -66,6 +63,6 @@ func (cmd CopyCommand) Run(args []string) error {
 		return err
 	}
 
-	fmt.Printf("%s.%s -> %s\n", cmdstyle.NAME_STYLE.FormatF("\"%s\"", name), style.BoldUnderline.Format(field), style.BoldInfo.Format("Copied to Clipboard"))
+	fmt.Printf("%s.%s -> %s\n", NAME_STYLE.FormatF("\"%s\"", name), style.BoldUnderline.Format(field), style.BoldInfo.Format("Copied to Clipboard"))
 	return nil
 }

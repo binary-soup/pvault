@@ -4,23 +4,21 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	cmdstyle "pvault/cmd/style"
 	"pvault/data"
 	vw "pvault/workflows/vault"
 	"strings"
 
-	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
 	"github.com/binary-soup/go-command/util"
 )
 
 type ImportCommand struct {
-	command.CommandBase
+	ConfigCommandBase
 }
 
 func NewImportCommand() ImportCommand {
 	return ImportCommand{
-		CommandBase: command.NewCommandBase("import", "import many passwords from CSV [name|password|username|url]. All items will use the same passkey"),
+		ConfigCommandBase: NewConfigCommandBase("import", "import many passwords from CSV [name|password|username|url]. All items will use the same passkey"),
 	}
 }
 
@@ -28,7 +26,7 @@ func (cmd ImportCommand) Run(args []string) error {
 	path := cmd.Flags.String("p", "", "path to the import CSV file")
 	cmd.Flags.Parse(args)
 
-	cfg, err := data.LoadConfig()
+	cfg, err := cmd.LoadConfig()
 	if err != nil {
 		return err
 	}
@@ -52,7 +50,7 @@ func (cmd ImportCommand) Run(args []string) error {
 	}
 
 	for _, password := range passwords {
-		fmt.Printf("%s -> ", cmdstyle.NAME_STYLE.Format(password.Name))
+		fmt.Printf("%s -> ", NAME_STYLE.Format(password.Name))
 
 		err = cmd.savePassword(workflow, password, passkey)
 		if err != nil {
