@@ -88,21 +88,22 @@ func (c Connection) SendManyMessages(name string, crt *crypt.Crypt, messages [][
 	return nil
 }
 
-func (c Connection) ReadManyMessages(name string, crt *crypt.Crypt, read func([]byte) error) error {
-	count := make([]byte, 4)
+func (c Connection) ReadManyMessages(name string, crt *crypt.Crypt, read func(uint32, uint32, []byte) error) error {
+	header := make([]byte, 4)
 
-	_, err := io.ReadFull(c.conn, count)
+	_, err := io.ReadFull(c.conn, header)
 	if err != nil {
 		return util.ChainError(err, "error reading messages count from connection")
 	}
+	count := binary.BigEndian.Uint32(header)
 
-	for range binary.BigEndian.Uint32(count) {
+	for i := range count {
 		bytes, err := c.ReadSecureMessage(name, crt)
 		if err != nil {
 			return err
 		}
 
-		err = read(bytes)
+		err = read(i, count, bytes)
 		if err != nil {
 			return err
 		}

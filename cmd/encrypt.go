@@ -75,7 +75,7 @@ func (cmd EncryptCommandBase) Run(args []string) error {
 	var cache *data.PasswordCache
 
 	if cmd.new {
-		if cfg.Vault.Index.NameExists(password.Name) {
+		if cfg.Vault.Index.HasName(password.Name) {
 			return util.Error(fmt.Sprintf("name \"%s\" already exists", password.Name))
 		}
 		cache = data.NewPasswordCache("")
@@ -86,7 +86,7 @@ func (cmd EncryptCommandBase) Run(args []string) error {
 		}
 		password.Cache = nil
 
-		if !cfg.Vault.Index.IdExists(cache.ID) {
+		if !cfg.Vault.Index.HasID(cache.ID) {
 			return util.Error(fmt.Sprintf("id \"%s\" not found", cache.ID.String()))
 		}
 	}

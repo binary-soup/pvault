@@ -7,8 +7,9 @@ import (
 )
 
 type Vault struct {
-	Path  string `json:"path"`
-	Index *Index
+	Path   string `json:"path"`
+	Index  *Index
+	Filter *Filter
 }
 
 func (v *Vault) Open() error {
@@ -22,9 +23,15 @@ func (v *Vault) Open() error {
 		return util.ChainError(err, "error loading index")
 	}
 
+	v.Filter, err = v.loadFilter()
+	if err != nil {
+		return util.ChainError(err, "error loading filter")
+	}
+
 	return nil
 }
 
-func (v Vault) Close() error {
-	return v.saveIndex()
+func (v Vault) Close() {
+	v.saveIndex()
+	v.saveFilter()
 }

@@ -39,12 +39,12 @@ func (idx Index) AddPair(name string, id uuid.UUID) {
 	idx.uuidMap[id] = name
 }
 
-func (idx Index) NameExists(name string) bool {
+func (idx Index) HasName(name string) bool {
 	_, ok := idx.nameMap[name]
 	return ok
 }
 
-func (idx Index) IdExists(id uuid.UUID) bool {
+func (idx Index) HasID(id uuid.UUID) bool {
 	_, ok := idx.uuidMap[id]
 	return ok
 }

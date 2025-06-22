@@ -13,12 +13,14 @@ import (
 )
 
 type HostWorkflow struct {
-	Vault vault.Vault
+	Vault   vault.Vault
+	persist bool
 }
 
-func NewHostWorkflow(v vault.Vault) HostWorkflow {
+func NewHostWorkflow(v vault.Vault, persist bool) HostWorkflow {
 	return HostWorkflow{
-		Vault: v,
+		Vault:   v,
+		persist: persist,
 	}
 }
 
@@ -49,7 +51,9 @@ func (w HostWorkflow) Run(port string) error {
 		if terminate {
 			return err
 		}
-		errorLog.Log(err)
+		if err != nil {
+			errorLog.Log(err)
+		}
 	}
 }
 
@@ -68,7 +72,8 @@ func (w HostWorkflow) accept(conn *sync.Connection, passkey string) (bool, error
 	conn.SendManyMessages("vault list", crt, w.buildVaultList())
 	successLog.Log("sent vault list")
 
-	return true, nil
+	successLog.Log("disconnected")
+	return !w.persist, nil
 }
 
 func (w HostWorkflow) authenticate(conn *sync.Connection, passkey string) (*crypt.Crypt, bool, error) {

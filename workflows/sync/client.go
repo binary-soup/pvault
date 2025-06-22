@@ -47,11 +47,13 @@ func (w ClientWorkflow) accept(conn *sync.Connection) error {
 	}
 
 	successLog.Log("receiving vault list")
-	err = conn.ReadManyMessages("vault list", crt, func(bytes []byte) error {
+	err = conn.ReadManyMessages("vault list", crt, func(idx, count uint32, bytes []byte) error {
 		item, err := ParseVaultItemFromBytes(bytes)
 		if err != nil {
 			return util.ChainError(err, "error parsing vault item from vault list")
 		}
+
+		fmt.Printf("%s %s ", style.Bolded.FormatF("[%d/%d]", idx+1, count), NAME_STYLE.Format(item.Name))
 
 		if w.promptAcceptItem(item) {
 			successLog.LogF("accepted item %s", item.ID.String())
@@ -102,29 +104,38 @@ func (w ClientWorkflow) authenticate(conn *sync.Connection) (*crypt.Crypt, error
 }
 
 func (w ClientWorkflow) promptAcceptItem(item *VaultItem) bool {
-	if w.Vault.Index.IdExists(item.ID) {
-		//TODO: implement modified time
-		style.Info.PrintF("%s up to date\n", NAME_STYLE.Format(item.Name))
+	if w.Vault.Filter.IsFiltered(item.ID) {
+		style.Info.Println("(filtered)")
 		return false
+	}
+
+	if w.Vault.Index.HasID(item.ID) {
+		return w.promptUpdateItem(item)
 	} else {
 		return w.promptNewItem(item)
 	}
 }
 
 func (w ClientWorkflow) promptNewItem(item *VaultItem) bool {
-	res := tools.PromptAccept(fmt.Sprintf("Keep new file %s [y/n/N]?", NAME_STYLE.Format(item.Name)), []byte("ynN"))
+	res := tools.PromptAccept(fmt.Sprintf("%s [y/n/N]?", []byte(style.Create.Format("(accept new file)"))), []byte("ynN"))
 	if res == 1 {
 		return false
 	}
 	if res == 2 {
-		//TODO: add filter
+		w.Vault.Filter.AddItem(item.ID)
+		style.Info.Println("(item added to filter)")
 		return false
 	}
 
-	for w.Vault.Index.NameExists(item.Name) {
-		style.Error.Println("Name already in use")
-		item.Name = tools.PromptString("Enter NEW name:")
+	for w.Vault.Index.HasName(item.Name) {
+		item.Name = tools.PromptString(fmt.Sprintf("%s Enter new %s:", style.Info.Format("(name in use)"), style.Bolded.Format("NAME")))
 	}
 
 	return true
+}
+
+func (w ClientWorkflow) promptUpdateItem(item *VaultItem) bool {
+	//TODO: implement modified time
+	style.Info.PrintF("%s up to date\n", NAME_STYLE.Format(item.Name))
+	return false
 }

@@ -65,7 +65,7 @@ func (cmd ImportCommand) Run(args []string) error {
 }
 
 func (cmd ImportCommand) savePassword(workflow vw.VaultWorkflow, password *data.Password, passkey string) error {
-	if workflow.Vault.Index.NameExists(password.Name) {
+	if workflow.Vault.Index.HasName(password.Name) {
 		return util.Error(fmt.Sprintf("name \"%s\" already exists", password.Name))
 	}
 
