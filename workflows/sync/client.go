@@ -3,6 +3,7 @@ package syncworkflow
 import (
 	"fmt"
 	"pvault/crypt"
+	"pvault/data/vault"
 	"pvault/tools"
 	"pvault/tools/sync"
 
@@ -10,7 +11,15 @@ import (
 	"github.com/binary-soup/go-command/util"
 )
 
-type ClientWorkflow struct{}
+type ClientWorkflow struct {
+	Vault vault.Vault
+}
+
+func NewClientWorkflow(v vault.Vault) ClientWorkflow {
+	return ClientWorkflow{
+		Vault: v,
+	}
+}
 
 func (w ClientWorkflow) Run(addr, port string) error {
 	client := sync.NewClient()
@@ -44,7 +53,12 @@ func (w ClientWorkflow) accept(conn *sync.Connection) error {
 			return util.ChainError(err, "error parsing vault item from vault list")
 		}
 
-		fmt.Printf("%s \"%s\"\n", item.ID.String(), item.Name)
+		if w.promptAcceptItem(item) {
+			successLog.LogF("accepted item %s", item.ID.String())
+		} else {
+			errorLog.LogF("denied item %s", item.ID.String())
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -52,6 +66,10 @@ func (w ClientWorkflow) accept(conn *sync.Connection) error {
 	}
 
 	return nil
+}
+
+func (w ClientWorkflow) hostError(err error) error {
+	return util.ChainError(err, "error from host")
 }
 
 func (w ClientWorkflow) authenticate(conn *sync.Connection) (*crypt.Crypt, error) {
@@ -83,6 +101,30 @@ func (w ClientWorkflow) authenticate(conn *sync.Connection) (*crypt.Crypt, error
 	}
 }
 
-func (w ClientWorkflow) hostError(err error) error {
-	return util.ChainError(err, "error from host")
+func (w ClientWorkflow) promptAcceptItem(item *VaultItem) bool {
+	if w.Vault.Index.IdExists(item.ID) {
+		//TODO: implement modified time
+		style.Info.PrintF("%s up to date\n", NAME_STYLE.Format(item.Name))
+		return false
+	} else {
+		return w.promptNewItem(item)
+	}
+}
+
+func (w ClientWorkflow) promptNewItem(item *VaultItem) bool {
+	res := tools.PromptAccept(fmt.Sprintf("Keep new file %s [y/n/N]?", NAME_STYLE.Format(item.Name)), []byte("ynN"))
+	if res == 1 {
+		return false
+	}
+	if res == 2 {
+		//TODO: add filter
+		return false
+	}
+
+	for w.Vault.Index.NameExists(item.Name) {
+		style.Error.Println("Name already in use")
+		item.Name = tools.PromptString("Enter NEW name:")
+	}
+
+	return true
 }

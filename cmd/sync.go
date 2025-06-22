@@ -26,6 +26,7 @@ func (cmd SyncCommand) Run(args []string) error {
 	if err != nil {
 		return err
 	}
+	defer cfg.Vault.Close()
 
 	if *host {
 		return syncworkflow.NewHostWorkflow(cfg.Vault).Run(*port)
@@ -35,5 +36,5 @@ func (cmd SyncCommand) Run(args []string) error {
 		return util.Error("(addr)ess missing or empty")
 	}
 
-	return syncworkflow.ClientWorkflow{}.Run(*addr, *port)
+	return syncworkflow.NewClientWorkflow(cfg.Vault).Run(*addr, *port)
 }
