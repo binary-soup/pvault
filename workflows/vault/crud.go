@@ -2,70 +2,62 @@ package vw
 
 import (
 	"pvault/crypt"
-	"pvault/data"
+	"pvault/data/password"
 	"pvault/tools"
 
 	"github.com/binary-soup/go-command/util"
 )
 
-func (v VaultWorkflow) ChooseOrVerifyPasskey(passkey *string) error {
-	var err error
-
-	if *passkey == "" {
-		*passkey, err = tools.ReadAndVerifyPasskey("Choose New")
-	} else {
-		err = tools.VerifyPasskey(*passkey)
-	}
-
-	return err
-}
-
-func (v VaultWorkflow) Encrypt(password *data.Password, cache *data.PasswordCache) error {
-	c, err := crypt.NewCrypt(cache.Passkey)
+func (v VaultWorkflow) Encrypt(cache *password.Cache) error {
+	c, err := crypt.NewCrypt(cache.Meta.Passkey)
 	if err != nil {
 		return util.ChainError(err, "error initializing crypt tool")
 	}
 
-	ciphertext, err := password.Encrypt(c)
+	ciphertext, err := cache.Password.Encrypt(c)
 	if err != nil {
 		return err
 	}
 
-	return v.Vault.SaveData(c.Header, ciphertext, cache.ID, password.Name)
+	return v.Vault.SaveData(c.Header, ciphertext, cache.Meta.ID, cache.Meta.Name)
 }
 
-func (v VaultWorkflow) Decrypt(name string, timeout float32) (*data.Password, *data.PasswordCache, error) {
+func (v VaultWorkflow) Decrypt(name string, timeout float32) (*password.Cache, error) {
 	header, ciphertext, id, err := v.Vault.ReadData(name)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	for {
 		passkey, err := tools.ReadPasskey("Enter")
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		c, invalidPasskey, err := crypt.LoadCrypt(passkey, header)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		if invalidPasskey {
 			tools.Timeout(timeout)
 			continue
 		}
 
-		password, err := data.DecryptPassword(c, ciphertext)
+		pswrd, err := password.Decrypt(c, ciphertext)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
-		cache := &data.PasswordCache{
+		meta := &password.Meta{
+			Name:    name,
 			Passkey: passkey,
 			ID:      id,
 		}
 
-		return password, cache, nil
+		return &password.Cache{
+			Password: pswrd,
+			Meta:     meta,
+		}, nil
 	}
 }
 

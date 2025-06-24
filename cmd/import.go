@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"pvault/data"
+	"pvault/data/password"
+	"pvault/tools"
 	vw "pvault/workflows/vault"
 	"strings"
 
@@ -44,15 +45,16 @@ func (cmd ImportCommand) Run(args []string) error {
 	defer cfg.Vault.Close()
 
 	var passkey string
-	err = workflow.ChooseOrVerifyPasskey(&passkey)
+	err = tools.PromptPasskey(&passkey)
 	if err != nil {
 		return err
 	}
 
 	for _, password := range passwords {
-		fmt.Printf("%s -> ", NAME_STYLE.Format(password.Name))
+		fmt.Printf("%s -> ", NAME_STYLE.Format(password.Meta.Name))
+		password.Meta.Passkey = passkey
 
-		err = cmd.savePassword(workflow, password, passkey)
+		err = cmd.savePassword(workflow, password)
 		if err != nil {
 			fmt.Printf("%s %s\n", style.BoldError.Format("[ERROR]"), err)
 			continue
@@ -64,36 +66,36 @@ func (cmd ImportCommand) Run(args []string) error {
 	return nil
 }
 
-func (cmd ImportCommand) savePassword(workflow vw.VaultWorkflow, password *data.Password, passkey string) error {
-	if workflow.Vault.Index.HasName(password.Name) {
-		return util.Error(fmt.Sprintf("name \"%s\" already exists", password.Name))
+func (cmd ImportCommand) savePassword(workflow vw.VaultWorkflow, cache *password.Cache) error {
+	if workflow.Vault.Index.HasName(cache.Meta.Name) {
+		return util.Error(fmt.Sprintf("name \"%s\" already exists", cache.Meta.Name))
 	}
 
-	return workflow.Encrypt(password, data.NewPasswordCache(passkey))
+	return workflow.Encrypt(cache)
 }
 
-func (cmd ImportCommand) loadImportCSV(path string) ([]*data.Password, error) {
+func (cmd ImportCommand) loadImportCSV(path string) ([]*password.Cache, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, util.ChainError(err, "error opening import file")
 	}
 	defer file.Close()
 
-	passwords := []*data.Password{}
+	passwords := []*password.Cache{}
 
 	scanner := bufio.NewScanner(file)
 	line := 0
 
 	for scanner.Scan() {
 		line++
-		password := cmd.parsePasswordFromCSV(strings.TrimSpace(scanner.Text()))
+		cache := cmd.parseLine(strings.TrimSpace(scanner.Text()))
 
-		err = password.Validate()
+		err = cache.Password.Validate()
 		if err != nil {
 			return nil, util.ChainErrorF(err, "[line %d] error validating password", line)
 		}
 
-		passwords = append(passwords, password)
+		passwords = append(passwords, cache)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -103,32 +105,34 @@ func (cmd ImportCommand) loadImportCSV(path string) ([]*data.Password, error) {
 	return passwords, nil
 }
 
-func (cmd ImportCommand) parsePasswordFromCSV(line string) *data.Password {
+func (cmd ImportCommand) parseLine(line string) *password.Cache {
 	tokens := strings.SplitN(line, ",", 5)
 
-	password := &data.Password{
-		Name:          tokens[0],
+	pswrd := &password.Password{
 		RecoveryCodes: []string{},
 	}
 
 	if len(tokens) > 1 {
-		password.Password = tokens[1]
+		pswrd.Password = tokens[1]
 	}
 
 	if len(tokens) > 2 {
-		password.Username = tokens[2]
+		pswrd.Username = tokens[2]
 	}
 
 	if len(tokens) > 3 {
-		password.URL = tokens[3]
+		pswrd.URL = tokens[3]
 	}
 
 	if len(tokens) > 4 {
 		codes := strings.Split(tokens[4], ":")
 
-		password.RecoveryCodes = make([]string, len(codes))
-		copy(password.RecoveryCodes, codes)
+		pswrd.RecoveryCodes = make([]string, len(codes))
+		copy(pswrd.RecoveryCodes, codes)
 	}
 
-	return password
+	return &password.Cache{
+		Password: pswrd,
+		Meta:     password.NewMeta(tokens[0], ""),
+	}
 }

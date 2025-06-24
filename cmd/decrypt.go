@@ -76,16 +76,16 @@ func (cmd DecryptCommandBase) Run(args []string) error {
 		return nil
 	}
 
-	password, cache, err := workflow.Decrypt(name, cfg.Passkey.Timeout)
+	cache, err := workflow.Decrypt(name, cfg.Passkey.Timeout)
 	if err != nil {
 		return err
 	}
 
-	if !cmd.remove {
-		password.Cache = cache
+	if cmd.remove {
+		err = cache.Password.SaveToFile(*out)
+	} else {
+		err = cache.SaveToFile(*out)
 	}
-
-	err = password.SaveToFile(*out)
 	if err != nil {
 		return err
 	}
@@ -97,6 +97,6 @@ func (cmd DecryptCommandBase) Run(args []string) error {
 		}
 	}
 
-	fmt.Printf("%s -> %s\n", NAME_STYLE.FormatF("\"%s\"", password.Name), style.BoldInfo.FormatF("%s from Vault", cmd.Name))
+	fmt.Printf("%s -> %s %s\n", NAME_STYLE.FormatF("\"%s\"", name), style.Info.FormatF("%s from", cmd.Name), style.BoldInfo.Format("VAULT"))
 	return nil
 }

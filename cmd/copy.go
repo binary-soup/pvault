@@ -42,7 +42,7 @@ func (cmd CopyCommand) Run(args []string) error {
 		return err
 	}
 
-	password, _, err := workflow.Decrypt(name, cfg.Passkey.Timeout)
+	cache, err := workflow.Decrypt(name, cfg.Passkey.Timeout)
 	if err != nil {
 		return err
 	}
@@ -50,13 +50,13 @@ func (cmd CopyCommand) Run(args []string) error {
 	field := ""
 	if *u {
 		field = "USERNAME"
-		err = tools.CopyToClipboard(password.Username)
+		err = tools.CopyToClipboard(cache.Password.Username)
 	} else if *url {
 		field = "URL"
-		err = tools.CopyToClipboard(password.URL)
+		err = tools.CopyToClipboard(cache.Password.URL)
 	} else if *p {
 		field = "PASSWORD"
-		err = tools.CopyToClipboard(password.Password)
+		err = tools.CopyToClipboard(cache.Password.Password)
 	}
 
 	if err != nil {

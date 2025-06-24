@@ -39,7 +39,7 @@ func PromptOverwrite(title, path string) bool {
 	return res == 0
 }
 
-func PromptString(prompt string) string {
+func PromptString(allowEmpty bool, prompt string) string {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Printf("%s ", prompt)
@@ -47,8 +47,20 @@ func PromptString(prompt string) string {
 		scanner.Scan()
 		line := strings.TrimSpace(scanner.Text())
 
-		if line != "" {
+		if allowEmpty || line != "" {
 			return line
 		}
 	}
+}
+
+func PromptPasskey(passkey *string) error {
+	var err error
+
+	if *passkey == "" {
+		*passkey, err = ReadAndVerifyPasskey("Choose New")
+	} else {
+		err = VerifyPasskey(*passkey)
+	}
+
+	return err
 }

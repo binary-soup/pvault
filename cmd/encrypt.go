@@ -3,7 +3,9 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"pvault/data"
+	"pvault/data/password"
+	"pvault/data/vault"
+	"pvault/tools"
 	vw "pvault/workflows/vault"
 
 	"github.com/binary-soup/go-command/style"
@@ -62,44 +64,38 @@ func (cmd EncryptCommandBase) Run(args []string) error {
 		return util.Error("(p)ath missing or invalid")
 	}
 
-	password, err := data.LoadPasswordFile(*path)
+	var cache *password.Cache
+	if cmd.new {
+		cache = &password.Cache{}
+		cache.Password, err = password.LoadFile(*path)
+		cache.Meta = password.NewMeta("", "")
+	} else {
+		cache, err = password.LoadCacheFile(*path)
+	}
 	if err != nil {
 		return err
 	}
 
-	err = password.Validate()
+	if !cmd.new && !cfg.Vault.Index.HasID(cache.Meta.ID) {
+		return util.Error(fmt.Sprintf("id \"%s\" not found", cache.Meta.ID.String()))
+	}
+
+	err = cache.Password.Validate()
 	if err != nil {
 		return util.ChainError(err, "error validating password")
 	}
 
-	var cache *data.PasswordCache
+	cmd.promptNewName(cfg.Vault.Index, cache.Meta)
 
-	if cmd.new {
-		if cfg.Vault.Index.HasName(password.Name) {
-			return util.Error(fmt.Sprintf("name \"%s\" already exists", password.Name))
-		}
-		cache = data.NewPasswordCache("")
-	} else {
-		cache = password.Cache
-		if cache == nil {
-			return util.Error("cache missing from password file")
-		}
-		password.Cache = nil
-
-		if !cfg.Vault.Index.HasID(cache.ID) {
-			return util.Error(fmt.Sprintf("id \"%s\" not found", cache.ID.String()))
-		}
+	err = tools.PromptPasskey(&cache.Meta.Passkey)
+	if err != nil {
+		return err
 	}
 
 	workflow := vw.NewVaultWorkflow(cfg.Vault)
 	defer cfg.Vault.Close()
 
-	err = workflow.ChooseOrVerifyPasskey(&cache.Passkey)
-	if err != nil {
-		return err
-	}
-
-	err = workflow.Encrypt(password, cache)
+	err = workflow.Encrypt(cache)
 	if err != nil {
 		return err
 	}
@@ -108,6 +104,16 @@ func (cmd EncryptCommandBase) Run(args []string) error {
 		os.Remove(*path)
 	}
 
-	fmt.Printf("%s -> %s\n", NAME_STYLE.FormatF("\"%s\"", password.Name), style.BoldInfo.FormatF("%s in Vault", cmd.Name))
+	fmt.Printf("%s -> %s %s\n", NAME_STYLE.FormatF("\"%s\"", cache.Meta.Name), style.Info.FormatF("%s in", cmd.Name), style.BoldInfo.Format("VAULT"))
 	return nil
+}
+
+func (cmd EncryptCommandBase) promptNewName(index *vault.Index, meta *password.Meta) string {
+	for meta.Name == "" || index.HasName(meta.Name) {
+		if meta.Name != "" {
+			style.Error.Println("(name already in use)")
+		}
+		meta.Name = tools.PromptString(true, fmt.Sprintf("Choose New %s:", style.Bolded.Format("NAME")))
+	}
+	return meta.Name
 }

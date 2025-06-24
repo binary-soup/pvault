@@ -128,7 +128,7 @@ func (w ClientWorkflow) promptNewItem(item *VaultItem) bool {
 	}
 
 	for w.Vault.Index.HasName(item.Name) {
-		item.Name = tools.PromptString(fmt.Sprintf("%s Enter new %s:", style.Info.Format("(name in use)"), style.Bolded.Format("NAME")))
+		item.Name = tools.PromptString(false, fmt.Sprintf("%s Choose new %s:", style.Info.Format("(name in use)"), style.Bolded.Format("NAME")))
 	}
 
 	return true
