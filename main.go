@@ -18,6 +18,7 @@ func main() {
 		cmd.NewSearchCommand(),
 		cmd.NewStashCommand(),
 		cmd.NewWithdrawCommand(),
+		cmd.NewDeleteCommand(),
 		cmd.NewUnlockCommand(),
 		cmd.NewRelockCommand(),
 		cmd.NewCopyCommand(),

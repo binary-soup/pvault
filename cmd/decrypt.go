@@ -12,12 +12,14 @@ import (
 type DecryptCommandBase struct {
 	ConfigCommandBase
 	remove bool
+	delete bool
 }
 
-func newDecryptCommandBase(name, desc string, remove bool) DecryptCommandBase {
+func newDecryptCommandBase(name, desc string, remove, delete bool) DecryptCommandBase {
 	return DecryptCommandBase{
 		ConfigCommandBase: NewConfigCommandBase(name, desc),
 		remove:            remove,
+		delete:            delete,
 	}
 }
 
@@ -29,7 +31,7 @@ type UnlockCommand struct {
 
 func NewUnlockCommand() UnlockCommand {
 	return UnlockCommand{
-		DecryptCommandBase: newDecryptCommandBase("unlock", "temporarily decrypt a file from the vault", false),
+		DecryptCommandBase: newDecryptCommandBase("unlock", "temporarily decrypt a file from the vault", false, false),
 	}
 }
 
@@ -41,15 +43,31 @@ type WithdrawCommand struct {
 
 func NewWithdrawCommand() WithdrawCommand {
 	return WithdrawCommand{
-		DecryptCommandBase: newDecryptCommandBase("withdraw", "decrypt and remove a file from the vault", true),
+		DecryptCommandBase: newDecryptCommandBase("withdraw", "decrypt and remove a file from the vault", true, false),
+	}
+}
+
+//#######################
+
+type DeleteCommand struct {
+	DecryptCommandBase
+}
+
+func NewDeleteCommand() DeleteCommand {
+	return DeleteCommand{
+		DecryptCommandBase: newDecryptCommandBase("delete", "delete a file from the vault", true, true),
 	}
 }
 
 //#######################
 
 func (cmd DecryptCommandBase) Run(args []string) error {
+	var out *string
+
 	search := cmd.Flags.String("s", "", "the search term")
-	out := cmd.Flags.String("o", "", "name of the out file. Defaults to search term (+.json)")
+	if !cmd.delete {
+		out = cmd.Flags.String("o", "", "name of the out file. Defaults to search term (+.json)")
+	}
 	cmd.Flags.Parse(args)
 
 	cfg, err := cmd.LoadConfig()
@@ -60,7 +78,7 @@ func (cmd DecryptCommandBase) Run(args []string) error {
 	if *search == "" {
 		return util.Error("(s)earch missing or invalid")
 	}
-	if *out == "" {
+	if !cmd.delete && *out == "" {
 		*out = *search + ".json"
 	}
 
@@ -72,8 +90,10 @@ func (cmd DecryptCommandBase) Run(args []string) error {
 		return err
 	}
 
-	if ok := tools.PromptOverwrite("OUT", *out); !ok {
-		return nil
+	if !cmd.delete {
+		if ok := tools.PromptOverwrite("OUT", *out); !ok {
+			return nil
+		}
 	}
 
 	cache, err := workflow.Decrypt(name, cfg.Passkey.Timeout)
@@ -81,10 +101,12 @@ func (cmd DecryptCommandBase) Run(args []string) error {
 		return err
 	}
 
-	if cmd.remove {
-		err = cache.Password.SaveToFile(*out)
-	} else {
-		err = cache.SaveToFile(*out)
+	if !cmd.delete {
+		if cmd.remove {
+			err = cache.Password.SaveToFile(*out)
+		} else {
+			err = cache.SaveToFile(*out)
+		}
 	}
 	if err != nil {
 		return err
