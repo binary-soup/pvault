@@ -1,6 +1,7 @@
 package vault
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/google/uuid"
@@ -23,6 +24,9 @@ func (v Vault) Search(substring string) []SearchItem {
 		}
 	})
 
+	slices.SortFunc(items, func(a, b SearchItem) int {
+		return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name))
+	})
 	return items
 }
 
