@@ -32,7 +32,7 @@ func (cmd SyncCommand) Run(args []string) error {
 	defer cfg.Vault.Close()
 
 	if *host {
-		return syncworkflow.NewHostWorkflow(cfg.Vault, *persist).Run(*port)
+		return syncworkflow.NewHostWorkflow(cfg.Vault).Run(*port, *persist)
 	}
 
 	if *addr == "" {

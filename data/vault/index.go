@@ -16,12 +16,15 @@ const INDEX_FILE = "index.txt"
 type Index struct {
 	nameMap map[string]uuid.UUID
 	uuidMap map[uuid.UUID]string
+
+	isDirty bool
 }
 
 func newIndex() *Index {
 	return &Index{
 		nameMap: map[string]uuid.UUID{},
 		uuidMap: map[uuid.UUID]string{},
+		isDirty: false,
 	}
 }
 
@@ -29,7 +32,7 @@ func (idx Index) Count() int {
 	return len(idx.nameMap)
 }
 
-func (idx Index) AddPair(name string, id uuid.UUID) {
+func (idx *Index) AddPair(name string, id uuid.UUID) {
 	oldName, ok := idx.uuidMap[id]
 	if ok && oldName != name {
 		delete(idx.nameMap, oldName)
@@ -37,6 +40,8 @@ func (idx Index) AddPair(name string, id uuid.UUID) {
 
 	idx.nameMap[name] = id
 	idx.uuidMap[id] = name
+
+	idx.isDirty = true
 }
 
 func (idx Index) HasName(name string) bool {
@@ -57,11 +62,13 @@ func (idx Index) GetID(name string) (uuid.UUID, error) {
 	return id, nil
 }
 
-func (idx Index) DeleteName(name string) {
-	id := idx.nameMap[name]
+func (idx *Index) DeleteID(id uuid.UUID) {
+	name := idx.uuidMap[id]
 
-	delete(idx.nameMap, name)
 	delete(idx.uuidMap, id)
+	delete(idx.nameMap, name)
+
+	idx.isDirty = true
 }
 
 func (idx Index) Iterate(itr func(int, string, uuid.UUID)) {
@@ -73,6 +80,10 @@ func (idx Index) Iterate(itr func(int, string, uuid.UUID)) {
 }
 
 func (v Vault) saveIndex() error {
+	if !v.Index.isDirty {
+		return nil
+	}
+
 	file, err := os.Create(filepath.Join(v.Path, INDEX_FILE))
 	if err != nil {
 		return util.ChainError(err, "error creating index file")
@@ -83,6 +94,7 @@ func (v Vault) saveIndex() error {
 		fmt.Fprintf(file, "%s:%s\n", id.String(), name)
 	})
 
+	v.Index.isDirty = false
 	return nil
 }
 

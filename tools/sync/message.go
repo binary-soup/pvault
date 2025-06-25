@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"io"
 	"os"
-	"pvault/crypt"
 
 	"github.com/binary-soup/go-command/util"
 )
@@ -18,6 +17,10 @@ func (c Connection) ExchangeHostname() (string, error) {
 }
 
 func (c Connection) SendMessage(name string, message []byte) error {
+	if c.Crypt != nil {
+		message = c.Crypt.Encrypt(message)
+	}
+
 	length := make([]byte, 4)
 	binary.BigEndian.PutUint32(length, uint32(len(message)))
 
@@ -32,10 +35,6 @@ func (c Connection) SendMessage(name string, message []byte) error {
 	}
 
 	return nil
-}
-
-func (c Connection) SendSecureMessage(name string, crt *crypt.Crypt, message []byte) error {
-	return c.SendMessage(name, crt.Encrypt(message))
 }
 
 func (c Connection) ReadMessage(name string) ([]byte, error) {
@@ -53,24 +52,17 @@ func (c Connection) ReadMessage(name string) ([]byte, error) {
 		return nil, util.ChainErrorF(err, "error reading %s from connection", name)
 	}
 
+	if c.Crypt != nil {
+		message, err = c.Crypt.Decrypt(message)
+		if err != nil {
+			return nil, util.ChainErrorF(err, "error decrypting %s from connection", name)
+		}
+	}
+
 	return message, nil
 }
 
-func (c Connection) ReadSecureMessage(name string, crt *crypt.Crypt) ([]byte, error) {
-	message, err := c.ReadMessage(name)
-	if err != nil {
-		return nil, err
-	}
-
-	plaintext, err := crt.Decrypt(message)
-	if err != nil {
-		return nil, util.ChainErrorF(err, "error decrypting %s from connection", name)
-	}
-
-	return plaintext, nil
-}
-
-func (c Connection) SendManyMessages(name string, crt *crypt.Crypt, messages [][]byte) error {
+func (c Connection) SendMessageBlock(name string, messages [][]byte) error {
 	count := make([]byte, 4)
 	binary.BigEndian.PutUint32(count, uint32(len(messages)))
 
@@ -80,7 +72,7 @@ func (c Connection) SendManyMessages(name string, crt *crypt.Crypt, messages [][
 	}
 
 	for _, msg := range messages {
-		err := c.SendSecureMessage(name, crt, msg)
+		err := c.SendMessage(name, msg)
 		if err != nil {
 			return err
 		}
@@ -88,25 +80,22 @@ func (c Connection) SendManyMessages(name string, crt *crypt.Crypt, messages [][
 	return nil
 }
 
-func (c Connection) ReadManyMessages(name string, crt *crypt.Crypt, read func(uint32, uint32, []byte) error) error {
-	header := make([]byte, 4)
+func (c Connection) ReadMessageBlock(name string) ([][]byte, error) {
+	count := make([]byte, 4)
 
-	_, err := io.ReadFull(c.conn, header)
+	_, err := io.ReadFull(c.conn, count)
 	if err != nil {
-		return util.ChainError(err, "error reading messages count from connection")
+		return nil, util.ChainError(err, "error reading messages count from connection")
 	}
-	count := binary.BigEndian.Uint32(header)
 
-	for i := range count {
-		bytes, err := c.ReadSecureMessage(name, crt)
-		if err != nil {
-			return err
-		}
+	messages := make([][]byte, binary.BigEndian.Uint32(count))
 
-		err = read(i, count, bytes)
+	for i := range messages {
+		bytes, err := c.ReadMessage(name)
 		if err != nil {
-			return err
+			return nil, err
 		}
+		messages[i] = bytes
 	}
-	return nil
+	return messages, nil
 }

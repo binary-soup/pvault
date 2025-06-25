@@ -10,6 +10,16 @@ import (
 	"github.com/google/uuid"
 )
 
+func (v Vault) SaveRaw(id uuid.UUID, name string, bytes []byte) error {
+	err := os.WriteFile(v.filepath(id), bytes, 0666)
+	if err != nil {
+		return util.ChainError(err, "error writing raw vault file")
+	}
+
+	v.Index.AddPair(name, id)
+	return nil
+}
+
 func (v Vault) SaveData(header crypt.Header, ciphertext crypt.Ciphertext, id uuid.UUID, name string) error {
 	file, err := os.Create(v.filepath(id))
 	if err != nil {
@@ -31,15 +41,18 @@ func (v Vault) SaveData(header crypt.Header, ciphertext crypt.Ciphertext, id uui
 	return nil
 }
 
-func (v Vault) ReadData(name string) ([]byte, []byte, uuid.UUID, error) {
-	id, err := v.Index.GetID(name)
+func (v Vault) LoadRaw(id uuid.UUID) ([]byte, error) {
+	raw, err := os.ReadFile(v.filepath(id))
 	if err != nil {
-		return nil, nil, uuid.Nil, err
+		return nil, util.ChainError(err, "error reading raw vault file")
 	}
+	return raw, nil
+}
 
+func (v Vault) LoadData(id uuid.UUID) ([]byte, []byte, error) {
 	file, err := os.Open(v.filepath(id))
 	if err != nil {
-		return nil, nil, id, util.ChainError(err, "error opening vault file")
+		return nil, nil, util.ChainError(err, "error opening vault file")
 	}
 	defer file.Close()
 
@@ -47,29 +60,24 @@ func (v Vault) ReadData(name string) ([]byte, []byte, uuid.UUID, error) {
 
 	_, err = file.Read(header)
 	if err != nil {
-		return nil, nil, id, util.ChainError(err, "error reading header from vault")
+		return nil, nil, util.ChainError(err, "error reading header from vault")
 	}
 
 	ciphertext, err := io.ReadAll(file)
 	if err != nil {
-		return nil, nil, id, util.ChainError(err, "error reading ciphertext from vault")
+		return nil, nil, util.ChainError(err, "error reading ciphertext from vault")
 	}
 
-	return header, ciphertext, id, nil
+	return header, ciphertext, nil
 }
 
-func (v Vault) DeleteData(name string) error {
-	id, err := v.Index.GetID(name)
-	if err != nil {
-		return err
-	}
-
-	err = os.Remove(v.filepath(id))
+func (v Vault) DeleteData(id uuid.UUID) error {
+	err := os.Remove(v.filepath(id))
 	if err != nil {
 		return util.ChainError(err, "error deleting file from vault")
 	}
 
-	v.Index.DeleteName(name)
+	v.Index.DeleteID(id)
 	return nil
 }
 

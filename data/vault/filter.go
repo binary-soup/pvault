@@ -14,16 +14,19 @@ const FILTER_FILE = "filter.txt"
 
 type Filter struct {
 	uuidSet map[uuid.UUID]struct{}
+	isDirty bool
 }
 
 func newFilter() *Filter {
 	return &Filter{
 		uuidSet: map[uuid.UUID]struct{}{},
+		isDirty: false,
 	}
 }
 
-func (f Filter) AddItem(id uuid.UUID) {
+func (f *Filter) AddItem(id uuid.UUID) {
 	f.uuidSet[id] = struct{}{}
+	f.isDirty = true
 }
 
 func (f Filter) IsFiltered(id uuid.UUID) bool {
@@ -33,6 +36,7 @@ func (f Filter) IsFiltered(id uuid.UUID) bool {
 
 func (f *Filter) Clear() {
 	f.uuidSet = map[uuid.UUID]struct{}{}
+	f.isDirty = true
 }
 
 func (f Filter) Iterate(itr func(int, uuid.UUID)) {
@@ -44,6 +48,10 @@ func (f Filter) Iterate(itr func(int, uuid.UUID)) {
 }
 
 func (v Vault) saveFilter() error {
+	if !v.Filter.isDirty {
+		return nil
+	}
+
 	file, err := os.Create(filepath.Join(v.Path, FILTER_FILE))
 	if err != nil {
 		return util.ChainError(err, "error creating filter file")
@@ -54,6 +62,7 @@ func (v Vault) saveFilter() error {
 		fmt.Fprintln(file, id.String())
 	})
 
+	v.Filter.isDirty = false
 	return nil
 }
 

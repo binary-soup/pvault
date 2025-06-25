@@ -32,6 +32,10 @@ func (v *Vault) Open() error {
 }
 
 func (v Vault) Close() {
+	v.Flush()
+}
+
+func (v Vault) Flush() {
 	v.saveIndex()
 	v.saveFilter()
 }

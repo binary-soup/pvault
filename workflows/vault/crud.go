@@ -23,7 +23,12 @@ func (v VaultWorkflow) Encrypt(cache *password.Cache) error {
 }
 
 func (v VaultWorkflow) Decrypt(name string, timeout float32) (*password.Cache, error) {
-	header, ciphertext, id, err := v.Vault.ReadData(name)
+	id, err := v.Vault.Index.GetID(name)
+	if err != nil {
+		return nil, err
+	}
+
+	header, ciphertext, err := v.Vault.LoadData(id)
 	if err != nil {
 		return nil, err
 	}
@@ -62,5 +67,10 @@ func (v VaultWorkflow) Decrypt(name string, timeout float32) (*password.Cache, e
 }
 
 func (v VaultWorkflow) Delete(name string) error {
-	return v.Vault.DeleteData(name)
+	id, err := v.Vault.Index.GetID(name)
+	if err != nil {
+		return err
+	}
+
+	return v.Vault.DeleteData(id)
 }

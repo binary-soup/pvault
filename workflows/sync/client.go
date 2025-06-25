@@ -2,7 +2,6 @@ package syncworkflow
 
 import (
 	"fmt"
-	"pvault/crypt"
 	"pvault/data/vault"
 	"pvault/tools"
 	"pvault/tools/sync"
@@ -30,43 +29,41 @@ func (w ClientWorkflow) Run(addr, port string) error {
 	}
 	defer conn.Close()
 
-	fmt.Printf("Connected to %s\n", style.BoldInfo.Format(conn.RemoteAddress()))
 	return w.accept(conn)
 }
 
 func (w ClientWorkflow) accept(conn *sync.Connection) error {
+	fmt.Printf("Connected to %s\n", style.BoldInfo.Format(conn.RemoteAddress()))
+
 	hostname, err := conn.ExchangeHostname()
 	if err != nil {
 		return err
 	}
 	successLog.LogF("host identified as %s", style.BoldInfo.Format(hostname))
 
-	crt, err := w.authenticate(conn)
+	conn.Crypt, err = w.authenticate(conn)
 	if err != nil {
 		return err
 	}
 
 	successLog.Log("receiving vault list")
-	err = conn.ReadManyMessages("vault list", crt, func(idx, count uint32, bytes []byte) error {
-		item, err := ParseVaultItemFromBytes(bytes)
-		if err != nil {
-			return util.ChainError(err, "error parsing vault item from vault list")
-		}
-
-		fmt.Printf("%s %s ", style.Bolded.FormatF("[%d/%d]", idx+1, count), NAME_STYLE.Format(item.Name))
-
-		if w.promptAcceptItem(item) {
-			successLog.LogF("accepted item %s", item.ID.String())
-		} else {
-			errorLog.LogF("denied item %s", item.ID.String())
-		}
-
-		return nil
-	})
+	list, err := conn.ReadMessageBlock("vault list")
 	if err != nil {
 		return err
 	}
 
+	for i, bytes := range list {
+		style.Bolded.PrintF("[%d/%d] ", i+1, len(list))
+
+		err := w.requestVaultItem(conn, bytes)
+		if err != nil {
+			errorLog.Log(err)
+		}
+		w.Vault.Flush()
+	}
+	conn.SendNoRequest()
+
+	successLog.Log("end of list")
 	return nil
 }
 
@@ -74,33 +71,42 @@ func (w ClientWorkflow) hostError(err error) error {
 	return util.ChainError(err, "error from host")
 }
 
-func (w ClientWorkflow) authenticate(conn *sync.Connection) (*crypt.Crypt, error) {
-	for {
-		passkey, err := tools.ReadPasskey("Enter Host")
-		if err != nil {
-			return nil, err
-		}
-
-		crt, err := crypt.NewCrypt(passkey)
-		if err != nil {
-			return nil, util.ChainError(err, "error creating crypt object")
-		}
-
-		conn.SendMessage("header", crt.Header)
-
-		status, err := conn.ReadResponse()
-		if status == sync.ERROR_NONE {
-			successLog.Log("passkey accepted")
-			return crt, nil
-		}
-		if status == sync.ERROR_AUTH {
-			errorLog.Log(err)
-			continue
-		}
-		if err != nil {
-			return nil, w.hostError(err)
-		}
+func (w ClientWorkflow) requestVaultItem(conn *sync.Connection, bytes []byte) error {
+	item, err := ParseVaultItemFromBytes(bytes)
+	if err != nil {
+		return util.ChainError(err, "error parsing vault item from vault list")
 	}
+
+	NAME_STYLE.Println(item.Name)
+
+	if !w.promptAcceptItem(item) {
+		errorLog.LogF("denied item %s", style.Bolded.Format(item.ID.String()))
+		return nil
+	}
+
+	successLog.LogF("accepted item %s", style.Bolded.Format(item.ID.String()))
+	conn.SendRequest("vault item", 1, item.ID[:])
+
+	status, err := conn.ReadResponse()
+	if status != sync.SUCCESS {
+		return w.hostError(err)
+	}
+	if err != nil {
+		return err
+	}
+
+	bytes, err = conn.ReadMessage("vault item")
+	if err != nil {
+		return err
+	}
+
+	err = w.Vault.SaveRaw(item.ID, item.Name, bytes)
+	if err != nil {
+		return err
+	}
+
+	successLog.Log("item received")
+	return nil
 }
 
 func (w ClientWorkflow) promptAcceptItem(item *VaultItem) bool {
@@ -136,6 +142,6 @@ func (w ClientWorkflow) promptNewItem(item *VaultItem) bool {
 
 func (w ClientWorkflow) promptUpdateItem(item *VaultItem) bool {
 	//TODO: implement modified time
-	style.Info.PrintF("%s up to date\n", NAME_STYLE.Format(item.Name))
+	style.Info.Println("(up to date)")
 	return false
 }
