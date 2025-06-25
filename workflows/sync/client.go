@@ -25,7 +25,7 @@ func (w ClientWorkflow) Run(addr, port string) error {
 
 	conn, err := client.Connect(addr + port)
 	if err != nil {
-		return nil
+		return err
 	}
 	defer conn.Close()
 
