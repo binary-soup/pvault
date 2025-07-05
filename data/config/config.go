@@ -9,7 +9,7 @@ import (
 )
 
 type Config struct {
-	Vault   vault.Vault   `json:"vault"`
+	Vault   *vault.Vault  `json:"vault"`
 	Passkey PasskeyConfig `json:"passkey"`
 }
 

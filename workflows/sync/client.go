@@ -11,10 +11,10 @@ import (
 )
 
 type ClientWorkflow struct {
-	Vault vault.Vault
+	Vault *vault.Vault
 }
 
-func NewClientWorkflow(v vault.Vault) ClientWorkflow {
+func NewClientWorkflow(v *vault.Vault) ClientWorkflow {
 	return ClientWorkflow{
 		Vault: v,
 	}

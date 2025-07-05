@@ -3,10 +3,10 @@ package vw
 import "pvault/data/vault"
 
 type VaultWorkflow struct {
-	Vault vault.Vault
+	Vault *vault.Vault
 }
 
-func NewVaultWorkflow(v vault.Vault) VaultWorkflow {
+func NewVaultWorkflow(v *vault.Vault) VaultWorkflow {
 	return VaultWorkflow{
 		Vault: v,
 	}

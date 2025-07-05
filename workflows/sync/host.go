@@ -12,10 +12,10 @@ import (
 )
 
 type HostWorkflow struct {
-	Vault vault.Vault
+	Vault *vault.Vault
 }
 
-func NewHostWorkflow(v vault.Vault) HostWorkflow {
+func NewHostWorkflow(v *vault.Vault) HostWorkflow {
 	return HostWorkflow{
 		Vault: v,
 	}
