@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"pvault/data/config"
 	"pvault/data/password"
 	"pvault/data/vault"
 	"pvault/tools"
@@ -11,16 +12,17 @@ import (
 	"strings"
 
 	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
 )
 
 type ImportCommand struct {
-	ConfigCommandBase
+	command.ConfigCommandBase[config.Config]
 }
 
 func NewImportCommand() ImportCommand {
 	return ImportCommand{
-		ConfigCommandBase: NewConfigCommandBase("import", "import many passwords from CSV [name|password|username|url]. All items will use the same passkey"),
+		ConfigCommandBase: command.NewConfigCommandBase[config.Config]("import", "import many passwords from CSV [name|password|username|url]. All items will use the same passkey"),
 	}
 }
 

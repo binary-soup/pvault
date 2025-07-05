@@ -3,23 +3,25 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"pvault/data/config"
 	"pvault/data/password"
 	"pvault/data/vault"
 	"pvault/tools"
 	vw "pvault/workflows/vault"
 
 	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
 )
 
 type EncryptCommandBase struct {
-	ConfigCommandBase
+	command.ConfigCommandBase[config.Config]
 	new bool
 }
 
 func newEncryptCommandBase(name, desc string, new bool) EncryptCommandBase {
 	return EncryptCommandBase{
-		ConfigCommandBase: NewConfigCommandBase(name, desc),
+		ConfigCommandBase: command.NewConfigCommandBase[config.Config](name, desc),
 		new:               new,
 	}
 }

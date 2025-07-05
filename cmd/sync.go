@@ -1,19 +1,21 @@
 package cmd
 
 import (
+	"pvault/data/config"
 	syncworkflow "pvault/workflows/sync"
 
 	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
 )
 
 type SyncCommand struct {
-	ConfigCommandBase
+	command.ConfigCommandBase[config.Config]
 }
 
 func NewSyncCommand() SyncCommand {
 	return SyncCommand{
-		ConfigCommandBase: NewConfigCommandBase("sync", "sync files between a host and client vault"),
+		ConfigCommandBase: command.NewConfigCommandBase[config.Config]("sync", "sync files between a host and client vault"),
 	}
 }
 

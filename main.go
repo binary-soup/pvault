@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"pvault/cmd"
+	"pvault/data/config"
 
 	"github.com/binary-soup/go-command/alert"
 	"github.com/binary-soup/go-command/command"
@@ -14,6 +15,7 @@ func main() {
 	flag.Parse()
 
 	runner := command.NewRunner(
+		command.NewConfigCommand[config.Config](),
 		cmd.NewSearchCommand(),
 		cmd.NewStashCommand(),
 		cmd.NewWithdrawCommand(),

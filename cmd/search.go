@@ -1,16 +1,19 @@
 package cmd
 
 import (
+	"pvault/data/config"
 	vw "pvault/workflows/vault"
+
+	"github.com/binary-soup/go-command/command"
 )
 
 type SearchCommand struct {
-	ConfigCommandBase
+	command.ConfigCommandBase[config.Config]
 }
 
 func NewSearchCommand() SearchCommand {
 	return SearchCommand{
-		ConfigCommandBase: NewConfigCommandBase("search", "search the items in the vault"),
+		ConfigCommandBase: command.NewConfigCommandBase[config.Config]("search", "search the items in the vault"),
 	}
 }
 

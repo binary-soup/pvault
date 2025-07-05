@@ -2,22 +2,24 @@ package cmd
 
 import (
 	"fmt"
+	"pvault/data/config"
 	"pvault/tools"
 	vw "pvault/workflows/vault"
 
 	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
 )
 
 type DecryptCommandBase struct {
-	ConfigCommandBase
+	command.ConfigCommandBase[config.Config]
 	remove bool
 	delete bool
 }
 
 func newDecryptCommandBase(name, desc string, remove, delete bool) DecryptCommandBase {
 	return DecryptCommandBase{
-		ConfigCommandBase: NewConfigCommandBase(name, desc),
+		ConfigCommandBase: command.NewConfigCommandBase[config.Config](name, desc),
 		remove:            remove,
 		delete:            delete,
 	}
