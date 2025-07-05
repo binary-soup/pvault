@@ -6,7 +6,7 @@ import (
 	"crypto/pbkdf2"
 	"crypto/sha256"
 
-	"github.com/binary-soup/go-command/util"
+	"github.com/binary-soup/go-command/alert"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -23,7 +23,7 @@ type Crypt struct {
 func NewCrypt(passkey string) (*Crypt, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(passkey), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, util.ChainError(err, "error hashing passkey")
+		return nil, alert.ChainError(err, "error hashing passkey")
 	}
 
 	return newCrypt(passkey, NewHeader(hash, randSalt()))
@@ -42,17 +42,17 @@ func LoadCrypt(passkey string, header Header) (*Crypt, bool, error) {
 func newCrypt(passkey string, header Header) (*Crypt, error) {
 	key, err := pbkdf2.Key(sha256.New, passkey, header.Salt(), PBKDF2_ITERATIONS, KEY_SIZE)
 	if err != nil {
-		return nil, util.ChainError(err, "error generating key from passkey")
+		return nil, alert.ChainError(err, "error generating key from passkey")
 	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, util.ChainError(err, "error creating AES cipher")
+		return nil, alert.ChainError(err, "error creating AES cipher")
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, util.ChainError(err, "error creating GCM mode")
+		return nil, alert.ChainError(err, "error creating GCM mode")
 	}
 
 	return &Crypt{

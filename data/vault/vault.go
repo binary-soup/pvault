@@ -3,7 +3,7 @@ package vault
 import (
 	"os"
 
-	"github.com/binary-soup/go-command/util"
+	"github.com/binary-soup/go-command/alert"
 )
 
 type Vault struct {
@@ -15,17 +15,17 @@ type Vault struct {
 func (v *Vault) Open() error {
 	err := os.Mkdir(v.Path, 0755)
 	if err != nil && !os.IsExist(err) {
-		return util.ChainError(err, "error creating vault directory")
+		return alert.ChainError(err, "error creating vault directory")
 	}
 
 	v.Index, err = v.loadIndex()
 	if err != nil {
-		return util.ChainError(err, "error loading index")
+		return alert.ChainError(err, "error loading index")
 	}
 
 	v.Filter, err = v.loadFilter()
 	if err != nil {
-		return util.ChainError(err, "error loading filter")
+		return alert.ChainError(err, "error loading filter")
 	}
 
 	return nil

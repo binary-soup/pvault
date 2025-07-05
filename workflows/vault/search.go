@@ -5,8 +5,8 @@ import (
 	"pvault/data/vault"
 	"pvault/tools"
 
+	"github.com/binary-soup/go-command/alert"
 	"github.com/binary-soup/go-command/style"
-	"github.com/binary-soup/go-command/util"
 )
 
 var SEARCH_ITEM_STYLE = style.New(style.Yellow)
@@ -25,7 +25,7 @@ func (v VaultWorkflow) Search(search string) []vault.SearchItem {
 func (v VaultWorkflow) SearchExactName(search string) (string, error) {
 	items := v.Search(search)
 	if len(items) == 0 {
-		return "", util.Error(fmt.Sprintf("no matches found for \"%s\"", search))
+		return "", alert.ErrorF("no matches found for \"%s\"", search)
 	}
 
 	if len(items) == 1 {

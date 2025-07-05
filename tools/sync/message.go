@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/binary-soup/go-command/util"
+	"github.com/binary-soup/go-command/alert"
 )
 
 func (c Connection) ExchangeHostname() (string, error) {
@@ -26,12 +26,12 @@ func (c Connection) SendMessage(name string, message []byte) error {
 
 	_, err := c.conn.Write(length)
 	if err != nil {
-		return util.ChainError(err, "error writing message header to connection")
+		return alert.ChainError(err, "error writing message header to connection")
 	}
 
 	_, err = c.conn.Write(message)
 	if err != nil {
-		return util.ChainErrorF(err, "error writing %s to connection", name)
+		return alert.ChainErrorF(err, "error writing %s to connection", name)
 	}
 
 	return nil
@@ -42,20 +42,20 @@ func (c Connection) ReadMessage(name string) ([]byte, error) {
 
 	_, err := io.ReadFull(c.conn, length)
 	if err != nil {
-		return nil, util.ChainError(err, "error reading message header from connection")
+		return nil, alert.ChainError(err, "error reading message header from connection")
 	}
 
 	message := make([]byte, binary.BigEndian.Uint32(length))
 
 	_, err = io.ReadFull(c.conn, message)
 	if err != nil {
-		return nil, util.ChainErrorF(err, "error reading %s from connection", name)
+		return nil, alert.ChainErrorF(err, "error reading %s from connection", name)
 	}
 
 	if c.Crypt != nil {
 		message, err = c.Crypt.Decrypt(message)
 		if err != nil {
-			return nil, util.ChainErrorF(err, "error decrypting %s from connection", name)
+			return nil, alert.ChainErrorF(err, "error decrypting %s from connection", name)
 		}
 	}
 
@@ -68,7 +68,7 @@ func (c Connection) SendMessageBlock(name string, messages [][]byte) error {
 
 	_, err := c.conn.Write(count)
 	if err != nil {
-		return util.ChainError(err, "error writing messages count to connection")
+		return alert.ChainError(err, "error writing messages count to connection")
 	}
 
 	for _, msg := range messages {
@@ -85,7 +85,7 @@ func (c Connection) ReadMessageBlock(name string) ([][]byte, error) {
 
 	_, err := io.ReadFull(c.conn, count)
 	if err != nil {
-		return nil, util.ChainError(err, "error reading messages count from connection")
+		return nil, alert.ChainError(err, "error reading messages count from connection")
 	}
 
 	messages := make([][]byte, binary.BigEndian.Uint32(count))

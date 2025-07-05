@@ -5,9 +5,9 @@ import (
 	"pvault/crypt"
 	"pvault/tools"
 
+	"github.com/binary-soup/go-command/alert"
 	"github.com/binary-soup/go-command/command"
 	"github.com/binary-soup/go-command/style"
-	"github.com/binary-soup/go-command/util"
 )
 
 type GenPasswordCommand struct {
@@ -25,12 +25,12 @@ func (cmd GenPasswordCommand) Run(args []string) error {
 	cmd.Flags.Parse(args)
 
 	if *len < 1 {
-		return util.Error("(l)ength missing or invalid")
+		return alert.Error("(l)ength missing or invalid")
 	}
 
 	password, err := crypt.RandPassword(*len)
 	if err != nil {
-		return util.ChainError(err, "error generating password")
+		return alert.ChainError(err, "error generating password")
 	}
 
 	err = tools.CopyToClipboard(password)

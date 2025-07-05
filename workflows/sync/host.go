@@ -6,8 +6,8 @@ import (
 	"pvault/tools"
 	"pvault/tools/sync"
 
+	"github.com/binary-soup/go-command/alert"
 	"github.com/binary-soup/go-command/style"
-	"github.com/binary-soup/go-command/util"
 	"github.com/google/uuid"
 )
 
@@ -98,12 +98,12 @@ func (w HostWorkflow) sendVaultFile(conn *sync.Connection, bytes []byte) error {
 	id, err := uuid.FromBytes(bytes)
 	if err != nil {
 		conn.SendClientError("could not parse uuid")
-		return util.ChainError(err, "error parsing message uuid")
+		return alert.ChainError(err, "error parsing message uuid")
 	}
 
 	if !w.Vault.Index.HasID(id) {
 		conn.SendClientError("invalid uuid")
-		return util.Error(fmt.Sprintf("received invalid uuid %s", id.String()))
+		return alert.ErrorF("received invalid uuid %s", id.String())
 	}
 
 	successLog.LogF("received vault request for %s", style.Bolded.Format(id.String()))

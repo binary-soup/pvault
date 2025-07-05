@@ -5,8 +5,8 @@ import (
 	"pvault/tools"
 	vw "pvault/workflows/vault"
 
+	"github.com/binary-soup/go-command/alert"
 	"github.com/binary-soup/go-command/style"
-	"github.com/binary-soup/go-command/util"
 )
 
 type CopyCommand struct {
@@ -32,7 +32,7 @@ func (cmd CopyCommand) Run(args []string) error {
 	}
 
 	if *search == "" {
-		return util.Error("(s)earch missing or invalid")
+		return alert.Error("(s)earch missing or invalid")
 	}
 
 	workflow := vw.NewVaultWorkflow(cfg.Vault)

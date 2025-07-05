@@ -10,8 +10,8 @@ import (
 	vw "pvault/workflows/vault"
 	"strings"
 
+	"github.com/binary-soup/go-command/alert"
 	"github.com/binary-soup/go-command/style"
-	"github.com/binary-soup/go-command/util"
 )
 
 type ImportCommand struct {
@@ -34,7 +34,7 @@ func (cmd ImportCommand) Run(args []string) error {
 	}
 
 	if *path == "" {
-		return util.Error("(p)ath missing or invalid")
+		return alert.Error("(p)ath missing or invalid")
 	}
 
 	workflow := vw.NewVaultWorkflow(cfg.Vault)
@@ -72,7 +72,7 @@ func (cmd ImportCommand) Run(args []string) error {
 func (cmd ImportCommand) loadImportCSV(path string, index *vault.Index) ([]*password.Cache, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, util.ChainError(err, "error opening import file")
+		return nil, alert.ChainError(err, "error opening import file")
 	}
 	defer file.Close()
 
@@ -93,7 +93,7 @@ func (cmd ImportCommand) loadImportCSV(path string, index *vault.Index) ([]*pass
 		cache := cmd.parseLine(line)
 
 		if index.HasName(cache.Meta.Name) {
-			errors = append(errors, cmd.lineError(lineNum, util.Error(fmt.Sprintf("name \"%s\" already exists", cache.Meta.Name))))
+			errors = append(errors, cmd.lineError(lineNum, alert.ErrorF("name \"%s\" already exists", cache.Meta.Name)))
 			continue
 		}
 
@@ -107,11 +107,11 @@ func (cmd ImportCommand) loadImportCSV(path string, index *vault.Index) ([]*pass
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, util.ChainError(err, "error parsing CSV file")
+		return nil, alert.ChainError(err, "error parsing CSV file")
 	}
 
 	if len(errors) > 1 {
-		return nil, util.Error(strings.Join(errors, "\n  "))
+		return nil, alert.Error(strings.Join(errors, "\n  "))
 	}
 	return passwords, nil
 }

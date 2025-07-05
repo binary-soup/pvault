@@ -6,8 +6,8 @@ import (
 	"pvault/tools"
 	"pvault/tools/sync"
 
+	"github.com/binary-soup/go-command/alert"
 	"github.com/binary-soup/go-command/style"
-	"github.com/binary-soup/go-command/util"
 )
 
 type ClientWorkflow struct {
@@ -68,13 +68,13 @@ func (w ClientWorkflow) accept(conn *sync.Connection) error {
 }
 
 func (w ClientWorkflow) hostError(err error) error {
-	return util.ChainError(err, "error from host")
+	return alert.ChainError(err, "error from host")
 }
 
 func (w ClientWorkflow) requestVaultItem(conn *sync.Connection, bytes []byte) error {
 	item, err := ParseVaultItemFromBytes(bytes)
 	if err != nil {
-		return util.ChainError(err, "error parsing vault item from vault list")
+		return alert.ChainError(err, "error parsing vault item from vault list")
 	}
 
 	NAME_STYLE.Println(item.Name)

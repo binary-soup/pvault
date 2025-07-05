@@ -3,7 +3,7 @@ package sync
 import (
 	"io"
 
-	"github.com/binary-soup/go-command/util"
+	"github.com/binary-soup/go-command/alert"
 )
 
 const (
@@ -32,7 +32,7 @@ func (c Connection) SendInternalError() error {
 func (c Connection) sendResponse(status uint8, message string) error {
 	_, err := c.conn.Write([]byte{byte(status)})
 	if err != nil {
-		return util.ChainError(err, "error writing response status to connection")
+		return alert.ChainError(err, "error writing response status to connection")
 	}
 
 	if message != "" {
@@ -46,7 +46,7 @@ func (c Connection) ReadResponse() (uint8, error) {
 
 	_, err := io.ReadFull(c.conn, header)
 	if err != nil {
-		return 0, util.ChainError(err, "error reading response status from connection")
+		return 0, alert.ChainError(err, "error reading response status from connection")
 	}
 
 	status := uint8(header[0])
@@ -60,5 +60,5 @@ func (c Connection) ReadResponse() (uint8, error) {
 		return status, err
 	}
 
-	return status, util.Error(string(message))
+	return status, alert.Error(string(message))
 }

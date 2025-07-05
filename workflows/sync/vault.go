@@ -1,7 +1,7 @@
 package syncworkflow
 
 import (
-	"github.com/binary-soup/go-command/util"
+	"github.com/binary-soup/go-command/alert"
 	"github.com/google/uuid"
 )
 
@@ -32,12 +32,12 @@ func (v VaultItem) ToBytes() []byte {
 
 func ParseVaultItemFromBytes(bytes []byte) (*VaultItem, error) {
 	if len(bytes) <= UUID_SIZE {
-		return nil, util.Error("data too short")
+		return nil, alert.Error("data too short")
 	}
 
 	id, err := uuid.FromBytes(bytes[:UUID_SIZE])
 	if err != nil {
-		return nil, util.ChainError(err, "error loading uuid")
+		return nil, alert.ChainError(err, "error loading uuid")
 	}
 
 	return &VaultItem{

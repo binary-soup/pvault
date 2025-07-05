@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/binary-soup/go-command/alert"
 	"github.com/binary-soup/go-command/style"
-	"github.com/binary-soup/go-command/util"
 )
 
 type Host struct {
@@ -24,7 +24,7 @@ func (h *Host) Start() error {
 
 	h.ln, err = net.Listen("tcp", h.Port)
 	if err != nil {
-		return util.ChainError(err, "error starting host tcp server")
+		return alert.ChainError(err, "error starting host tcp server")
 	}
 
 	fmt.Printf("Listening on port %s\n", style.BoldInfo.Format(h.Port))
@@ -34,7 +34,7 @@ func (h *Host) Start() error {
 func (h Host) Accept() (*Connection, error) {
 	conn, err := h.ln.Accept()
 	if err != nil {
-		return nil, util.ChainError(err, "error accepting client connection")
+		return nil, alert.ChainError(err, "error accepting client connection")
 	}
 
 	return NewConnection(conn), nil

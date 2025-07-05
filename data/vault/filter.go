@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/binary-soup/go-command/util"
+	"github.com/binary-soup/go-command/alert"
 	"github.com/google/uuid"
 )
 
@@ -54,7 +54,7 @@ func (v Vault) saveFilter() error {
 
 	file, err := os.Create(filepath.Join(v.Path, FILTER_FILE))
 	if err != nil {
-		return util.ChainError(err, "error creating filter file")
+		return alert.ChainError(err, "error creating filter file")
 	}
 	defer file.Close()
 
@@ -72,7 +72,7 @@ func (v Vault) loadFilter() (*Filter, error) {
 		return newFilter(), nil
 	}
 	if err != nil {
-		return nil, util.ChainError(err, "error opening filter file")
+		return nil, alert.ChainError(err, "error opening filter file")
 	}
 	defer file.Close()
 
@@ -85,13 +85,13 @@ func (v Vault) loadFilter() (*Filter, error) {
 
 		id, err := uuid.Parse(scanner.Text())
 		if err != nil {
-			return nil, util.ChainErrorF(err, "[line %d] invalid uuid", line)
+			return nil, alert.ChainErrorF(err, "[line %d] invalid uuid", line)
 		}
 		filter.AddItem(id)
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, util.ChainError(err, "error parsing filter file")
+		return nil, alert.ChainError(err, "error parsing filter file")
 	}
 	return filter, nil
 }

@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/binary-soup/go-command/alert"
 	"github.com/binary-soup/go-command/style"
-	"github.com/binary-soup/go-command/util"
 )
 
 func ReadInteger(title string, min, max int) (int, error) {
@@ -18,7 +18,7 @@ func ReadInteger(title string, min, max int) (int, error) {
 		fmt.Printf("Enter %s: ", style.Bolded.Format(title))
 
 		if !scanner.Scan() {
-			return -1, util.Error("error reading input")
+			return -1, alert.Error("error reading input")
 		}
 
 		n, err := strconv.Atoi(strings.TrimSpace(scanner.Text()))

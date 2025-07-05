@@ -1,6 +1,6 @@
 package crypt
 
-import "github.com/binary-soup/go-command/util"
+import "github.com/binary-soup/go-command/alert"
 
 func (c Crypt) Encrypt(plaintext []byte) Ciphertext {
 	nonce := randNonce()
@@ -12,7 +12,7 @@ func (c Crypt) Encrypt(plaintext []byte) Ciphertext {
 func (c Crypt) Decrypt(ciphertext Ciphertext) ([]byte, error) {
 	plaintext, err := c.cipher.Open(nil, ciphertext.Nonce(), ciphertext.Text(), nil)
 	if err != nil {
-		return nil, util.ChainError(err, "error decrypting bytes")
+		return nil, alert.ChainError(err, "error decrypting bytes")
 	}
 
 	return plaintext, nil

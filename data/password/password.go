@@ -1,6 +1,7 @@
 package password
 
 import (
+	"github.com/binary-soup/go-command/alert"
 	"github.com/binary-soup/go-command/util"
 )
 
@@ -21,7 +22,7 @@ func (password Password) SaveToFile(path string) error {
 
 func (password Password) Validate() error {
 	if password.Password == "" && len(password.RecoveryCodes) == 0 {
-		return util.Error("both \"password\" and \"recovery codes\" cannot be empty")
+		return alert.Error("both \"password\" and \"recovery codes\" cannot be empty")
 	}
 	return nil
 }

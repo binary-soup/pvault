@@ -3,7 +3,7 @@ package sync
 import (
 	"io"
 
-	"github.com/binary-soup/go-command/util"
+	"github.com/binary-soup/go-command/alert"
 )
 
 const (
@@ -21,7 +21,7 @@ func (c Connection) SendRequest(name string, kind int, message []byte) error {
 func (c Connection) sendRequest(name string, kind int, message []byte) error {
 	_, err := c.conn.Write([]byte{byte(kind)})
 	if err != nil {
-		return util.ChainError(err, "error writing request kind to connection")
+		return alert.ChainError(err, "error writing request kind to connection")
 	}
 
 	if message != nil {
@@ -35,7 +35,7 @@ func (c Connection) ReceiveRequest() (int, []byte, error) {
 
 	_, err := io.ReadFull(c.conn, header)
 	if err != nil {
-		return -1, nil, util.ChainError(err, "error reading request kind from connection")
+		return -1, nil, alert.ChainError(err, "error reading request kind from connection")
 	}
 
 	kind := int(header[0])

@@ -5,7 +5,7 @@ import (
 	"pvault/tools"
 	"pvault/tools/sync"
 
-	"github.com/binary-soup/go-command/util"
+	"github.com/binary-soup/go-command/alert"
 )
 
 func (w ClientWorkflow) authenticate(conn *sync.Connection) (*crypt.Crypt, error) {
@@ -17,7 +17,7 @@ func (w ClientWorkflow) authenticate(conn *sync.Connection) (*crypt.Crypt, error
 
 		crt, err := crypt.NewCrypt(passkey)
 		if err != nil {
-			return nil, util.ChainError(err, "error creating crypt object")
+			return nil, alert.ChainError(err, "error creating crypt object")
 		}
 
 		conn.SendMessage("header", crt.Header)
@@ -53,7 +53,7 @@ func (w HostWorkflow) authenticate(conn *sync.Connection, passkey string) (*cryp
 		}
 		if err != nil {
 			conn.SendInternalError()
-			return nil, util.ChainError(err, "error creating crypt object")
+			return nil, alert.ChainError(err, "error creating crypt object")
 		}
 
 		conn.SendSuccess()

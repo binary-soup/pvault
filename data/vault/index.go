@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/binary-soup/go-command/util"
+	"github.com/binary-soup/go-command/alert"
 	"github.com/google/uuid"
 )
 
@@ -57,7 +57,7 @@ func (idx Index) HasID(id uuid.UUID) bool {
 func (idx Index) GetID(name string) (uuid.UUID, error) {
 	id, ok := idx.nameMap[name]
 	if !ok {
-		return uuid.Nil, util.Error(fmt.Sprintf("name \"%s\" not found", name))
+		return uuid.Nil, alert.ErrorF("name \"%s\" not found", name)
 	}
 	return id, nil
 }
@@ -86,7 +86,7 @@ func (v Vault) saveIndex() error {
 
 	file, err := os.Create(filepath.Join(v.Path, INDEX_FILE))
 	if err != nil {
-		return util.ChainError(err, "error creating index file")
+		return alert.ChainError(err, "error creating index file")
 	}
 	defer file.Close()
 
@@ -104,7 +104,7 @@ func (v Vault) loadIndex() (*Index, error) {
 		return newIndex(), nil
 	}
 	if err != nil {
-		return nil, util.ChainError(err, "error opening index file")
+		return nil, alert.ChainError(err, "error opening index file")
 	}
 	defer file.Close()
 
@@ -123,7 +123,7 @@ func (v Vault) loadIndex() (*Index, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, util.ChainError(err, "error parsing index file")
+		return nil, alert.ChainError(err, "error parsing index file")
 	}
 	return index, nil
 }
@@ -131,12 +131,12 @@ func (v Vault) loadIndex() (*Index, error) {
 func (v Vault) parseIndexPair(line string, lineNumber int) (string, uuid.UUID, error) {
 	tokens := strings.SplitN(line, ":", 2)
 	if len(tokens) < 2 {
-		return "", uuid.Nil, util.Error(fmt.Sprintf("[line %d] invalid index pair", lineNumber))
+		return "", uuid.Nil, alert.ErrorF("[line %d] invalid index pair", lineNumber)
 	}
 
 	id, err := uuid.Parse(tokens[0])
 	if err != nil {
-		return "", uuid.Nil, util.ChainErrorF(err, "[line %d] invalid uuid", lineNumber)
+		return "", uuid.Nil, alert.ChainErrorF(err, "[line %d] invalid uuid", lineNumber)
 	}
 
 	return tokens[1], id, nil

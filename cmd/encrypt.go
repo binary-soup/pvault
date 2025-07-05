@@ -8,8 +8,8 @@ import (
 	"pvault/tools"
 	vw "pvault/workflows/vault"
 
+	"github.com/binary-soup/go-command/alert"
 	"github.com/binary-soup/go-command/style"
-	"github.com/binary-soup/go-command/util"
 )
 
 type EncryptCommandBase struct {
@@ -61,7 +61,7 @@ func (cmd EncryptCommandBase) Run(args []string) error {
 	}
 
 	if *path == "" {
-		return util.Error("(p)ath missing or invalid")
+		return alert.Error("(p)ath missing or invalid")
 	}
 
 	var cache *password.Cache
@@ -77,12 +77,12 @@ func (cmd EncryptCommandBase) Run(args []string) error {
 	}
 
 	if !cmd.new && !cfg.Vault.Index.HasID(cache.Meta.ID) {
-		return util.Error(fmt.Sprintf("id \"%s\" not found", cache.Meta.ID.String()))
+		return alert.ErrorF("id \"%s\" not found", cache.Meta.ID.String())
 	}
 
 	err = cache.Password.Validate()
 	if err != nil {
-		return util.ChainError(err, "error validating password")
+		return alert.ChainError(err, "error validating password")
 	}
 
 	cmd.promptNewName(cfg.Vault.Index, cache.Meta)

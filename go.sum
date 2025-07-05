@@ -2,6 +2,8 @@ github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/binary-soup/go-command v1.1.2 h1:SNPXbP1pL+Jv5T0s8Bk7seJpaGrHLNbAUOj6h4M4NyQ=
 github.com/binary-soup/go-command v1.1.2/go.mod h1:PKWp67aYKESU+WcDgn6+ror5TmL2av/4RbvFStZQELM=
+github.com/binary-soup/go-command v1.2.0 h1:tBRPxb0jn3px9Bb5PPuXG0S8bDctMLwvY9vdTh390g4=
+github.com/binary-soup/go-command v1.2.0/go.mod h1:PKWp67aYKESU+WcDgn6+ror5TmL2av/4RbvFStZQELM=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 golang.org/x/crypto v0.39.0 h1:SHs+kF4LP+f+p14esP5jAoDpHU8Gu/v9lFRK6IT5imM=

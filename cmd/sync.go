@@ -3,8 +3,8 @@ package cmd
 import (
 	syncworkflow "pvault/workflows/sync"
 
+	"github.com/binary-soup/go-command/alert"
 	"github.com/binary-soup/go-command/style"
-	"github.com/binary-soup/go-command/util"
 )
 
 type SyncCommand struct {
@@ -36,7 +36,7 @@ func (cmd SyncCommand) Run(args []string) error {
 	}
 
 	if *addr == "" {
-		return util.Error("(addr)ess missing or empty")
+		return alert.Error("(addr)ess missing or empty")
 	}
 
 	if *fresh {
