@@ -8,8 +8,6 @@ import (
 	"github.com/binary-soup/go-command/alert"
 )
 
-const PASSWORD_MIN_LIFETIME = 3
-
 type Config struct {
 	Vault    *vault.Vault   `json:"vault"`
 	Passkey  PasskeyConfig  `json:"passkey"`
@@ -43,8 +41,8 @@ func (cfg Config) Validate() ([]error, error) {
 		errs = append(errs, alert.Error("passkey timeout cannot be negative"))
 	}
 
-	if cfg.Password.Lifetime < PASSWORD_MIN_LIFETIME {
-		errs = append(errs, alert.ErrorF("password lifetime cannot be less than %d seconds", PASSWORD_MIN_LIFETIME))
+	if cfg.Password.Lifetime < 0 {
+		errs = append(errs, alert.Error("password lifetime cannot be negative"))
 	}
 
 	return errs, nil
