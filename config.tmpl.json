@@ -4,5 +4,8 @@
     },
     "passkey": {
         "timeout": 3.0
+    },
+    "password": {
+        "lifetime": 10
     }
 }

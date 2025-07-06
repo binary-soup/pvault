@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"math"
 	"pvault/data/config"
 	"pvault/tools"
 	vw "pvault/workflows/vault"
@@ -49,22 +50,38 @@ func (cmd CopyCommand) Run(args []string) error {
 		return err
 	}
 
-	field := ""
+	NAME_STYLE.Print(name)
+
 	if *u {
-		field = "USERNAME"
-		err = tools.CopyToClipboard(cache.Password.Username)
+		err = cmd.copyToClipboard(cfg, "USERNAME", cache.Password.Username)
 	} else if *url {
-		field = "URL"
-		err = tools.CopyToClipboard(cache.Password.URL)
+		err = cmd.copyToClipboard(cfg, "URL", cache.Password.URL)
 	} else if *p {
-		field = "PASSWORD"
-		err = tools.CopyToClipboard(cache.Password.Password)
+		err = cmd.copyToClipboard(cfg, "PASSWORD", cache.Password.Password)
 	}
 
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("%s.%s -> %s\n", NAME_STYLE.FormatF("\"%s\"", name), style.BoldUnderline.Format(field), style.BoldInfo.Format("Copied to Clipboard"))
+	return nil
+}
+
+func (cmd CopyCommand) copyToClipboard(cfg *config.Config, field, text string) error {
+	fmt.Printf(".%s -> %s\n", style.Bolded.Format(field), style.BoldInfo.Format("Copied to Clipboard"))
+
+	ch, err := tools.TempCopyToClipboard(text, cfg.Password.Lifetime, "REDACTED")
+	if ch == nil || err != nil {
+		return err
+	}
+
+	for range int(math.Floor(float64(cfg.Password.Lifetime))) {
+		tools.Timeout(1)
+		style.Bolded.Print("-")
+	}
+
+	<-ch
+	style.Delete.Println("\nREDACTED")
+
 	return nil
 }
