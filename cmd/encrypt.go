@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"pvault/data/config"
@@ -9,76 +10,85 @@ import (
 	"pvault/tools"
 	vw "pvault/workflows/vault"
 
-	"github.com/binary-soup/go-command/alert"
-	"github.com/binary-soup/go-command/command"
-	"github.com/binary-soup/go-command/style"
+	"github.com/binary-soup/go-commando/alert"
+	"github.com/binary-soup/go-commando/command"
+	"github.com/binary-soup/go-commando/style"
 )
 
-type EncryptCommandBase struct {
+type encryptCommandBase struct {
 	command.ConfigCommandBase[config.Config]
-	new bool
+	flags  *encryptFlags
+	create bool
 }
 
-func newEncryptCommandBase(name, desc string, new bool) EncryptCommandBase {
-	return EncryptCommandBase{
-		ConfigCommandBase: command.NewConfigCommandBase[config.Config](name, desc),
-		new:               new,
+type encryptFlags struct {
+	Path *string
+	Keep *bool
+}
+
+func (f *encryptFlags) Set(flags *flag.FlagSet) {
+	f.Path = flags.String("p", "", "path to the password file")
+	f.Keep = flags.Bool("keep", false, "keep the original password file")
+}
+
+func newEncryptCommandBase(name, desc string, create bool) encryptCommandBase {
+	flags := new(encryptFlags)
+
+	return encryptCommandBase{
+		ConfigCommandBase: command.NewConfigCommandBase[config.Config](name, desc, flags),
+		flags:             flags,
+		create:            create,
 	}
 }
 
 //#######################
 
 type RelockCommand struct {
-	EncryptCommandBase
+	encryptCommandBase
 }
 
 func NewRelockCommand() RelockCommand {
 	return RelockCommand{
-		EncryptCommandBase: newEncryptCommandBase("relock", "re-encrypt a file back into the vault", false),
+		encryptCommandBase: newEncryptCommandBase("relock", "re-encrypt a file back into the vault", false),
 	}
 }
 
 //#######################
 
 type StashCommand struct {
-	EncryptCommandBase
+	encryptCommandBase
 }
 
 func NewStashCommand() StashCommand {
 	return StashCommand{
-		EncryptCommandBase: newEncryptCommandBase("stash", "encrypt and stash a new file in the vault", true),
+		encryptCommandBase: newEncryptCommandBase("stash", "encrypt and stash a new file in the vault", true),
 	}
 }
 
 //#######################
 
-func (cmd EncryptCommandBase) Run(args []string) error {
-	path := cmd.Flags.String("p", "", "path to the password file")
-	keep := cmd.Flags.Bool("keep", false, "keep the original password file")
-	cmd.Flags.Parse(args)
-
+func (cmd encryptCommandBase) Run() error {
 	cfg, err := cmd.LoadConfig()
 	if err != nil {
 		return err
 	}
 
-	if *path == "" {
+	if *cmd.flags.Path == "" {
 		return alert.Error("(p)ath missing or invalid")
 	}
 
-	var cache *password.Cache
-	if cmd.new {
-		cache = &password.Cache{}
-		cache.Password, err = password.LoadFile(*path)
+	var cache password.Cache
+	if cmd.create {
+		cache.Password, err = password.LoadFile(*cmd.flags.Path)
 		cache.Meta = password.NewMeta("", "")
 	} else {
-		cache, err = password.LoadCacheFile(*path)
+		cache, err = password.LoadCacheFile(*cmd.flags.Path)
 	}
 	if err != nil {
 		return err
 	}
 
-	if !cmd.new && !cfg.Vault.Index.HasID(cache.Meta.ID) {
+	if !cmd.create && !cfg.Vault.Index.HasID(cache.Meta.ID) {
 		return alert.ErrorF("id \"%s\" not found", cache.Meta.ID.String())
 	}
 
@@ -102,15 +112,15 @@ func (cmd EncryptCommandBase) Run(args []string) error {
 		return err
 	}
 
-	if !*keep {
-		os.Remove(*path)
+	if !*cmd.flags.Keep {
+		os.Remove(*cmd.flags.Path)
 	}
 
 	fmt.Printf("%s -> %s %s\n", NAME_STYLE.FormatF("\"%s\"", cache.Meta.Name), style.Info.FormatF("%s in", cmd.Name), style.BoldInfo.Format("VAULT"))
 	return nil
 }
 
-func (cmd EncryptCommandBase) promptNewName(index *vault.Index, meta *password.Meta) string {
+func (cmd encryptCommandBase) promptNewName(index *vault.Index, meta password.Meta) string {
 	for meta.Name == "" || index.HasName(meta.Name) {
 		if meta.Name != "" {
 			style.Error.Println("(name already in use)")

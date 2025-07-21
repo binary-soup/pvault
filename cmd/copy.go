@@ -1,46 +1,58 @@
 package cmd
 
 import (
+	"flag"
 	"fmt"
 	"math"
 	"pvault/data/config"
 	"pvault/tools"
 	vw "pvault/workflows/vault"
 
-	"github.com/binary-soup/go-command/alert"
-	"github.com/binary-soup/go-command/command"
-	"github.com/binary-soup/go-command/style"
+	"github.com/binary-soup/go-commando/alert"
+	"github.com/binary-soup/go-commando/command"
+	"github.com/binary-soup/go-commando/style"
 )
 
 type CopyCommand struct {
 	command.ConfigCommandBase[config.Config]
+	flags *copyFlags
+}
+
+type copyFlags struct {
+	Search *string
+
+	CopyUsername *bool
+	CopyURL      *bool
+}
+
+func (f *copyFlags) Set(flags *flag.FlagSet) {
+	f.Search = flags.String("s", "", "the search term")
+	f.CopyUsername = flags.Bool("u", false, "copy username")
+	f.CopyURL = flags.Bool("url", false, "copy url")
 }
 
 func NewCopyCommand() CopyCommand {
+	flags := new(copyFlags)
+
 	return CopyCommand{
-		ConfigCommandBase: command.NewConfigCommandBase[config.Config]("copy", "copy password data to the clipboard"),
+		ConfigCommandBase: command.NewConfigCommandBase[config.Config]("copy", "copy password data to the clipboard", flags),
+		flags:             flags,
 	}
 }
 
-func (cmd CopyCommand) Run(args []string) error {
-	search := cmd.Flags.String("s", "", "the search term")
-	u := cmd.Flags.Bool("u", false, "copy username")
-	url := cmd.Flags.Bool("url", false, "copy url")
-	p := cmd.Flags.Bool("p", true, "copy password")
-	cmd.Flags.Parse(args)
-
+func (cmd CopyCommand) Run() error {
 	cfg, err := cmd.LoadConfig()
 	if err != nil {
 		return err
 	}
 
-	if *search == "" {
+	if *cmd.flags.Search == "" {
 		return alert.Error("(s)earch missing or invalid")
 	}
 
 	workflow := vw.NewVaultWorkflow(cfg.Vault)
 
-	name, err := workflow.SearchExactName(*search)
+	name, err := workflow.SearchExactName(*cmd.flags.Search)
 	if err != nil {
 		return err
 	}
@@ -52,11 +64,11 @@ func (cmd CopyCommand) Run(args []string) error {
 
 	NAME_STYLE.Print(name)
 
-	if *u {
+	if *cmd.flags.CopyUsername {
 		err = cmd.copyToClipboard(cfg, "USERNAME", cache.Password.Username)
-	} else if *url {
+	} else if *cmd.flags.CopyURL {
 		err = cmd.copyToClipboard(cfg, "URL", cache.Password.URL)
-	} else if *p {
+	} else { // copy password
 		err = cmd.copyToClipboard(cfg, "PASSWORD", cache.Password.Password)
 	}
 
@@ -67,7 +79,7 @@ func (cmd CopyCommand) Run(args []string) error {
 	return nil
 }
 
-func (cmd CopyCommand) copyToClipboard(cfg *config.Config, field, text string) error {
+func (cmd CopyCommand) copyToClipboard(cfg config.Config, field, text string) error {
 	fmt.Printf(".%s -> %s\n", style.Bolded.Format(field), style.BoldInfo.Format("Copied to Clipboard"))
 
 	ch, err := tools.TempCopyToClipboard(text, cfg.Password.Lifetime, "REDACTED")

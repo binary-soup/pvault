@@ -1,8 +1,8 @@
 package password
 
 import (
-	"github.com/binary-soup/go-command/alert"
-	"github.com/binary-soup/go-command/util"
+	"github.com/binary-soup/go-commando/alert"
+	"github.com/binary-soup/go-commando/data"
 )
 
 type Password struct {
@@ -12,12 +12,12 @@ type Password struct {
 	RecoveryCodes []string `json:"recovery_codes,omitempty"`
 }
 
-func LoadFile(path string) (*Password, error) {
-	return util.LoadJSON[Password]("password", path)
+func LoadFile(path string) (Password, error) {
+	return data.LoadJSON[Password]("password", path)
 }
 
 func (password Password) SaveToFile(path string) error {
-	return util.SaveJSON("password", &password, path)
+	return data.SaveJSON("password", &password, path)
 }
 
 func (password Password) Validate() error {

@@ -5,7 +5,7 @@ import (
 	"pvault/tools"
 	"pvault/tools/sync"
 
-	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-commando/alert"
 )
 
 func (w ClientWorkflow) authenticate(conn *sync.Connection) (*crypt.Crypt, error) {

@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/binary-soup/go-command/style"
+	"github.com/binary-soup/go-commando/style"
 )
 
 func PromptAccept(prompt string, options []byte) int {

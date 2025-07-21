@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-commando/alert"
 )
 
 func (c Connection) ExchangeHostname() (string, error) {

@@ -1,6 +1,6 @@
 package crypt
 
-import "github.com/binary-soup/go-command/alert"
+import "github.com/binary-soup/go-commando/alert"
 
 func (c Crypt) Encrypt(plaintext []byte) Ciphertext {
 	nonce := randNonce()

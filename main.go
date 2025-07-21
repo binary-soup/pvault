@@ -6,8 +6,8 @@ import (
 	"pvault/cmd"
 	"pvault/data/config"
 
-	"github.com/binary-soup/go-command/alert"
-	"github.com/binary-soup/go-command/command"
+	"github.com/binary-soup/go-commando/alert"
+	"github.com/binary-soup/go-commando/command"
 )
 
 func main() {

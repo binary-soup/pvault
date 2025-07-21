@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/binary-soup/go-command/style"
+	"github.com/binary-soup/go-commando/style"
 )
 
 const LOG_INDENT = "  "

@@ -2,7 +2,7 @@ package tools
 
 import (
 	"github.com/atotto/clipboard"
-	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-commando/alert"
 )
 
 func CopyToClipboard(text string) error {

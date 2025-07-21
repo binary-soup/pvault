@@ -5,8 +5,8 @@ import (
 	"pvault/data/vault"
 	"pvault/tools"
 
-	"github.com/binary-soup/go-command/alert"
-	"github.com/binary-soup/go-command/style"
+	"github.com/binary-soup/go-commando/alert"
+	"github.com/binary-soup/go-commando/style"
 )
 
 var SEARCH_ITEM_STYLE = style.New(style.Yellow)

@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/binary-soup/go-command/alert"
-	"github.com/binary-soup/go-command/style"
+	"github.com/binary-soup/go-commando/alert"
+	"github.com/binary-soup/go-commando/style"
 )
 
 func ReadInteger(title string, min, max int) (int, error) {

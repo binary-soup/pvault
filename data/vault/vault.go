@@ -3,7 +3,7 @@ package vault
 import (
 	"os"
 
-	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-commando/alert"
 )
 
 type Vault struct {

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"pvault/data/vault"
 
-	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-commando/alert"
 )
 
 type Config struct {
@@ -26,12 +26,12 @@ func (cfg Config) Load() error {
 	return cfg.Vault.Open()
 }
 
-func (cfg Config) Validate() ([]error, error) {
+func (cfg Config) Validate() []error {
 	errs := []error{}
 
 	verr, err := cfg.validateVault()
 	if err != nil {
-		return nil, err
+		return nil
 	}
 	if verr != nil {
 		errs = append(errs, verr)
@@ -45,7 +45,7 @@ func (cfg Config) Validate() ([]error, error) {
 		errs = append(errs, alert.Error("password lifetime cannot be negative"))
 	}
 
-	return errs, nil
+	return errs
 }
 
 func (cfg Config) validateVault() (error, error) {

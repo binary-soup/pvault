@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"pvault/data/config"
@@ -11,38 +12,47 @@ import (
 	vw "pvault/workflows/vault"
 	"strings"
 
-	"github.com/binary-soup/go-command/alert"
-	"github.com/binary-soup/go-command/command"
-	"github.com/binary-soup/go-command/style"
+	"github.com/binary-soup/go-commando/alert"
+	"github.com/binary-soup/go-commando/command"
+	"github.com/binary-soup/go-commando/style"
 )
 
 type ImportCommand struct {
 	command.ConfigCommandBase[config.Config]
+	flags *importFlags
+}
+
+type importFlags struct {
+	Path *string
+}
+
+func (f *importFlags) Set(flags *flag.FlagSet) {
+	f.Path = flags.String("p", "", "path to the import CSV file")
 }
 
 func NewImportCommand() ImportCommand {
+	flags := new(importFlags)
+
 	return ImportCommand{
-		ConfigCommandBase: command.NewConfigCommandBase[config.Config]("import", "import many passwords from CSV [name|password|username|url]. All items will use the same passkey"),
+		ConfigCommandBase: command.NewConfigCommandBase[config.Config]("import", "import many passwords from CSV [name|password|username|url|recovery codes] (no headers). All items will use the same passkey", flags),
+		flags:             flags,
 	}
 }
 
-func (cmd ImportCommand) Run(args []string) error {
-	path := cmd.Flags.String("p", "", "path to the import CSV file")
-	cmd.Flags.Parse(args)
-
+func (cmd ImportCommand) Run() error {
 	cfg, err := cmd.LoadConfig()
 	if err != nil {
 		return err
 	}
 
-	if *path == "" {
+	if *cmd.flags.Path == "" {
 		return alert.Error("(p)ath missing or invalid")
 	}
 
 	workflow := vw.NewVaultWorkflow(cfg.Vault)
 	defer cfg.Vault.Close()
 
-	passwords, err := cmd.loadImportCSV(*path, cfg.Vault.Index)
+	passwords, err := cmd.loadImportCSV(*cmd.flags.Path, cfg.Vault.Index)
 	if err != nil {
 		return err
 	}
@@ -71,14 +81,14 @@ func (cmd ImportCommand) Run(args []string) error {
 	return nil
 }
 
-func (cmd ImportCommand) loadImportCSV(path string, index *vault.Index) ([]*password.Cache, error) {
+func (cmd ImportCommand) loadImportCSV(path string, index *vault.Index) ([]password.Cache, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, alert.ChainError(err, "error opening import file")
 	}
 	defer file.Close()
 
-	passwords := []*password.Cache{}
+	passwords := []password.Cache{}
 	errors := []string{"Invalid CSV File"}
 
 	scanner := bufio.NewScanner(file)
@@ -118,10 +128,10 @@ func (cmd ImportCommand) loadImportCSV(path string, index *vault.Index) ([]*pass
 	return passwords, nil
 }
 
-func (cmd ImportCommand) parseLine(line string) *password.Cache {
+func (cmd ImportCommand) parseLine(line string) password.Cache {
 	tokens := strings.SplitN(line, ",", 5)
 
-	pswrd := &password.Password{
+	pswrd := password.Password{
 		RecoveryCodes: []string{},
 	}
 
@@ -144,7 +154,7 @@ func (cmd ImportCommand) parseLine(line string) *password.Cache {
 		copy(pswrd.RecoveryCodes, codes)
 	}
 
-	return &password.Cache{
+	return password.Cache{
 		Password: pswrd,
 		Meta:     password.NewMeta(tokens[0], ""),
 	}

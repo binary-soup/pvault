@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"pvault/crypt"
 
-	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-commando/alert"
 	"github.com/google/uuid"
 )
 

@@ -5,10 +5,10 @@ import (
 	"pvault/data/password"
 	"pvault/tools"
 
-	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-commando/alert"
 )
 
-func (v VaultWorkflow) Encrypt(cache *password.Cache) error {
+func (v VaultWorkflow) Encrypt(cache password.Cache) error {
 	c, err := crypt.NewCrypt(cache.Meta.Passkey)
 	if err != nil {
 		return alert.ChainError(err, "error initializing crypt tool")
@@ -53,7 +53,7 @@ func (v VaultWorkflow) Decrypt(name string, timeout float32) (*password.Cache, e
 			return nil, err
 		}
 
-		meta := &password.Meta{
+		meta := password.Meta{
 			Name:    name,
 			Passkey: passkey,
 			ID:      id,

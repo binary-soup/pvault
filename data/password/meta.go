@@ -8,8 +8,8 @@ type Meta struct {
 	ID      uuid.UUID `json:"uuid"`
 }
 
-func NewMeta(name, passkey string) *Meta {
-	return &Meta{
+func NewMeta(name, passkey string) Meta {
+	return Meta{
 		Name:    name,
 		Passkey: passkey,
 		ID:      uuid.New(),

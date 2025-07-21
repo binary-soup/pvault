@@ -1,8 +1,6 @@
 package vault
 
-import (
-	"github.com/binary-soup/go-command/util"
-)
+import "github.com/binary-soup/go-command/util"
 
 type Cache struct {
 	Passkey string `json:"passkey"`
