@@ -1,12 +1,8 @@
 .vscode
-pvault
-
 temp
-config.json
-config2.json
+
+pvault
+pvault_*
 
 main.json
 other.json
-
-prod.sh
-config.prod.json

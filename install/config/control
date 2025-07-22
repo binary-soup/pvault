@@ -1,0 +1,7 @@
+Package: pvault
+Version: <version>
+Section: utils
+Priority: optional
+Architecture: <architecture>
+Maintainer: Ryan Stamp <contact@binarysoup.dev>
+Description: Simple and secure local-only password manager
