@@ -16,6 +16,7 @@ func main() {
 
 	runner := command.NewRunner(
 		command.NewConfigCommand[config.Config](),
+		cmd.NewVersionCommand(),
 		cmd.NewSearchCommand(),
 		cmd.NewStashCommand(),
 		cmd.NewWithdrawCommand(),

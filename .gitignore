@@ -5,5 +5,8 @@ temp
 config.json
 config2.json
 
+main.json
+other.json
+
 prod.sh
 config.prod.json
