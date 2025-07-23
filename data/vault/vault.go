@@ -12,11 +12,18 @@ type Vault struct {
 	Filter *Filter `json:"-"`
 }
 
-func (v *Vault) Open() error {
+func (v Vault) Create() error {
 	err := os.Mkdir(v.Path, 0755)
-	if err != nil && !os.IsExist(err) {
+	if err != nil {
 		return alert.ChainError(err, "error creating vault directory")
 	}
+
+	//TODO: create version info
+	return nil
+}
+
+func (v *Vault) Open() error {
+	var err error
 
 	v.Index, err = v.loadIndex()
 	if err != nil {

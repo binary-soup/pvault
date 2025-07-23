@@ -30,26 +30,30 @@ func (cmd InitCommand) Run(args []string) error {
 
 	path := commando_config.GetProfilePath(DATA_DIR, *profile)
 
-	ok, err := data.PathExists(path)
-	if err != nil {
-		return err
-	}
-	if ok {
-		style.Info.Println("[UP TO DATE]")
-		return nil
-	}
-
-	err = cmd.initProfile(*profile, path)
+	cfg, err := cmd.initProfile(*profile, path)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Created profile %s [%s]\n", *profile, style.Create.Format(path))
+	err = cmd.initVault(cfg.Vault)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (cmd InitCommand) initProfile(profile, path string) error {
-	cfg := config.Config{
+func (cmd InitCommand) initProfile(profile, path string) (*config.Config, error) {
+	ok, err := data.FileExists(path)
+	if err != nil {
+		return nil, err
+	}
+	if ok {
+		fmt.Printf("Profile (up to date) [%s]\n", style.Info.Format(path))
+		return util.LoadJSON[config.Config]("profile config", path)
+	}
+
+	cfg := &config.Config{
 		Vault: &vault.Vault{
 			Path: filepath.Join(filepath.Dir(path), profile+".vault"),
 		},
@@ -62,5 +66,37 @@ func (cmd InitCommand) initProfile(profile, path string) error {
 	}
 
 	os.MkdirAll(filepath.Dir(path), 0755)
-	return util.SaveJSON("profile config", &cfg, path)
+	err = util.SaveJSON("profile config", cfg, path)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("Created new Profile [%s]\n", style.Create.Format(path))
+
+	return cfg, nil
+}
+
+func (cmd InitCommand) initVault(v *vault.Vault) error {
+	ok, err := data.DirExists(v.Path)
+	if err != nil {
+		return err
+	}
+
+	if !ok {
+		return cmd.createVault(v)
+	}
+
+	//TODO: check version info and upgrade if needed.
+
+	fmt.Printf("Vault (up to date) [%s]\n", style.Info.Format(v.Path))
+	return nil
+}
+
+func (cmd InitCommand) createVault(v *vault.Vault) error {
+	err := v.Create()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Created new Vault [%s]\n", style.Create.Format(v.Path))
+	return nil
 }
