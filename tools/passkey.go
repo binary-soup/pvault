@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/binary-soup/go-command/alert"
-	"github.com/binary-soup/go-command/style"
+	"github.com/binary-soup/go-commando/alert"
+	"github.com/binary-soup/go-commando/style"
 	"golang.org/x/term"
 )
 

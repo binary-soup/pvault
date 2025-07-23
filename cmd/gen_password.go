@@ -5,9 +5,9 @@ import (
 	"pvault/crypt"
 	"pvault/tools"
 
-	"github.com/binary-soup/go-command/alert"
-	"github.com/binary-soup/go-command/command"
-	"github.com/binary-soup/go-command/style"
+	"github.com/binary-soup/go-commando/alert"
+	"github.com/binary-soup/go-commando/command"
+	"github.com/binary-soup/go-commando/style"
 )
 
 type GenPasswordCommand struct {

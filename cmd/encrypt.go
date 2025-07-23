@@ -9,9 +9,9 @@ import (
 	"pvault/tools"
 	vw "pvault/workflows/vault"
 
-	"github.com/binary-soup/go-command/alert"
-	"github.com/binary-soup/go-command/command"
-	"github.com/binary-soup/go-command/style"
+	"github.com/binary-soup/go-commando/alert"
+	"github.com/binary-soup/go-commando/command"
+	"github.com/binary-soup/go-commando/style"
 )
 
 type EncryptCommandBase struct {
@@ -57,7 +57,7 @@ func (cmd EncryptCommandBase) Run(args []string) error {
 	keep := cmd.Flags.Bool("keep", false, "keep the original password file")
 	cmd.Flags.Parse(args)
 
-	cfg, err := cmd.LoadConfig()
+	cfg, err := cmd.LoadConfig(DATA_DIR)
 	if err != nil {
 		return err
 	}

@@ -1,8 +1,8 @@
 package password
 
 import (
-	"github.com/binary-soup/go-command/alert"
-	"github.com/binary-soup/go-command/util"
+	"github.com/binary-soup/go-commando/alert"
+	"github.com/binary-soup/go-commando/util"
 )
 
 type Password struct {

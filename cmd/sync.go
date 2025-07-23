@@ -4,9 +4,9 @@ import (
 	"pvault/data/config"
 	syncworkflow "pvault/workflows/sync"
 
-	"github.com/binary-soup/go-command/alert"
-	"github.com/binary-soup/go-command/command"
-	"github.com/binary-soup/go-command/style"
+	"github.com/binary-soup/go-commando/alert"
+	"github.com/binary-soup/go-commando/command"
+	"github.com/binary-soup/go-commando/style"
 )
 
 type SyncCommand struct {
@@ -27,7 +27,7 @@ func (cmd SyncCommand) Run(args []string) error {
 	fresh := cmd.Flags.Bool("fresh", false, "preform a fresh sync (clears the filter)")
 	cmd.Flags.Parse(args)
 
-	cfg, err := cmd.LoadConfig()
+	cfg, err := cmd.LoadConfig(DATA_DIR)
 	if err != nil {
 		return err
 	}

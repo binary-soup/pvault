@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"pvault/crypt"
 
-	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-commando/alert"
 )
 
 func (password Password) Encrypt(c *crypt.Crypt) (crypt.Ciphertext, error) {

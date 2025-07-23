@@ -5,7 +5,7 @@ import (
 	"pvault/data/password"
 	"pvault/tools"
 
-	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-commando/alert"
 )
 
 func (v VaultWorkflow) Encrypt(cache *password.Cache) error {

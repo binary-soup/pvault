@@ -1,7 +1,7 @@
 package vault
 
 import (
-	"github.com/binary-soup/go-command/util"
+	"github.com/binary-soup/go-commando/util"
 )
 
 type Cache struct {

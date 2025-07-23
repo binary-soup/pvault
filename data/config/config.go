@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"pvault/data/vault"
 
-	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-commando/alert"
 )
 
 type Config struct {

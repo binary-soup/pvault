@@ -6,7 +6,7 @@ import (
 	"crypto/pbkdf2"
 	"crypto/sha256"
 
-	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-commando/alert"
 	"golang.org/x/crypto/bcrypt"
 )
 

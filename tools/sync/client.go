@@ -3,7 +3,7 @@ package sync
 import (
 	"net"
 
-	"github.com/binary-soup/go-command/alert"
+	"github.com/binary-soup/go-commando/alert"
 )
 
 type Client struct{}

@@ -4,7 +4,7 @@ import (
 	"pvault/data/config"
 	vw "pvault/workflows/vault"
 
-	"github.com/binary-soup/go-command/command"
+	"github.com/binary-soup/go-commando/command"
 )
 
 type SearchCommand struct {
@@ -21,7 +21,7 @@ func (cmd SearchCommand) Run(args []string) error {
 	search := cmd.Flags.String("s", "", "the search term. Leave blank to list all")
 	cmd.Flags.Parse(args)
 
-	cfg, err := cmd.LoadConfig()
+	cfg, err := cmd.LoadConfig(DATA_DIR)
 	if err != nil {
 		return err
 	}

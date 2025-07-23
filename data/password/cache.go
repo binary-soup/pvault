@@ -1,6 +1,6 @@
 package password
 
-import "github.com/binary-soup/go-command/util"
+import "github.com/binary-soup/go-commando/util"
 
 type Cache struct {
 	Password *Password `json:"password"`

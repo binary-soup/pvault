@@ -6,9 +6,9 @@ import (
 	"pvault/tools"
 	vw "pvault/workflows/vault"
 
-	"github.com/binary-soup/go-command/alert"
-	"github.com/binary-soup/go-command/command"
-	"github.com/binary-soup/go-command/style"
+	"github.com/binary-soup/go-commando/alert"
+	"github.com/binary-soup/go-commando/command"
+	"github.com/binary-soup/go-commando/style"
 )
 
 type DecryptCommandBase struct {
@@ -72,7 +72,7 @@ func (cmd DecryptCommandBase) Run(args []string) error {
 	}
 	cmd.Flags.Parse(args)
 
-	cfg, err := cmd.LoadConfig()
+	cfg, err := cmd.LoadConfig(DATA_DIR)
 	if err != nil {
 		return err
 	}

@@ -3,8 +3,8 @@ package cmd
 import (
 	"pvault/data/version"
 
-	"github.com/binary-soup/go-command/command"
-	"github.com/binary-soup/go-command/style"
+	"github.com/binary-soup/go-commando/command"
+	"github.com/binary-soup/go-commando/style"
 )
 
 type VersionCommand struct {
