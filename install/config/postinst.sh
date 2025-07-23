@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e # exit on error
 
-echo "Initializing pvault..."
+# detect active user
+USER=${SUDO_USER:-$(logname)}
+echo -e "Installing for \e[1m$USER\e[0m"
 
-# simply run init command
-/usr/local/bin/pvault init
+# run init command at user level (not root)
+runuser -l "$USER" -c '/usr/local/bin/pvault init'
