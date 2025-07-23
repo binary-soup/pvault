@@ -7,9 +7,9 @@ import (
 )
 
 type Vault struct {
-	Path   string `json:"path"`
-	Index  *Index
-	Filter *Filter
+	Path   string  `json:"path"`
+	Index  *Index  `json:"-"`
+	Filter *Filter `json:"-"`
 }
 
 func (v *Vault) Open() error {

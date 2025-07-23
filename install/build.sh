@@ -16,14 +16,18 @@ mkdir -p $PACKAGE/DEBIAN
 
 ## copy and update control info
 echo "|> Setting control info (Architecture: ${ARCH}, Version: ${VERSION})"
-cp config/control $PACKAGE/DEBIAN/control
+cp config/control.txt $PACKAGE/DEBIAN/control
 
 sed -i "0,/^Architecture:/s/^Architecture:.*/Architecture: ${ARCH}/" ${PACKAGE}/DEBIAN/control
 sed -i "0,/^Version:/s/^Version:.*/Version: ${VERSION}/" ${PACKAGE}/DEBIAN/control
 
+## copy post install script
+cp config/postinst.sh $PACKAGE/DEBIAN/postinst
+chmod 755 $PACKAGE/DEBIAN/postinst
+
 ## build app
 echo "|> Building app (Architecture: ${ARCH})"
-GOOS=linux GOARCH=$ARCH go build -C .. -ldflags="-s -w" -o pvault_${VERSION}
+GOOS=linux GOARCH=$ARCH go build -C .. -ldflags="-s -w" -tags release -o pvault_${VERSION}
 
 mkdir -p $PACKAGE/usr/local/bin
 mv ../pvault_${VERSION} $PACKAGE/usr/local/bin/pvault

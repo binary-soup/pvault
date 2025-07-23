@@ -8,6 +8,11 @@ import (
 	"github.com/binary-soup/go-commando/alert"
 )
 
+const (
+	DEFAULT_PASSKEY_TIMEOUT   = 3.0
+	DEFAULT_PASSWORD_LIFETIME = 10.0
+)
+
 type Config struct {
 	Vault    *vault.Vault   `json:"vault"`
 	Passkey  PasskeyConfig  `json:"passkey"`
