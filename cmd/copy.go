@@ -50,7 +50,7 @@ func (cmd CopyCommand) Run(args []string) error {
 		return err
 	}
 
-	NAME_STYLE.Print(name)
+	style.Highlight.Print(name)
 
 	if *u {
 		err = cmd.copyToClipboard(cfg, "USERNAME", cache.Password.Username)

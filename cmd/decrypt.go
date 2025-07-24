@@ -121,6 +121,6 @@ func (cmd DecryptCommandBase) Run(args []string) error {
 		}
 	}
 
-	fmt.Printf("%s -> %s %s\n", NAME_STYLE.FormatF("\"%s\"", name), style.Info.FormatF("%s from", cmd.Name), style.BoldInfo.Format("VAULT"))
+	fmt.Printf("%s -> %s %s\n", style.Highlight.FormatF("\"%s\"", name), style.Info.FormatF("%s from", cmd.Name), style.BoldInfo.Format("VAULT"))
 	return nil
 }

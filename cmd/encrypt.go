@@ -106,7 +106,7 @@ func (cmd EncryptCommandBase) Run(args []string) error {
 		os.Remove(*path)
 	}
 
-	fmt.Printf("%s -> %s %s\n", NAME_STYLE.FormatF("\"%s\"", cache.Meta.Name), style.Info.FormatF("%s in", cmd.Name), style.BoldInfo.Format("VAULT"))
+	fmt.Printf("%s -> %s %s\n", style.Highlight.FormatF("\"%s\"", cache.Meta.Name), style.Info.FormatF("%s in", cmd.Name), style.BoldInfo.Format("VAULT"))
 	return nil
 }
 

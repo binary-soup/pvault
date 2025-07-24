@@ -56,7 +56,7 @@ func (cmd ImportCommand) Run(args []string) error {
 	}
 
 	for _, password := range passwords {
-		fmt.Printf("%s -> ", NAME_STYLE.Format(password.Meta.Name))
+		fmt.Printf("%s -> ", style.Highlight.Format(password.Meta.Name))
 		password.Meta.Passkey = passkey
 
 		err = workflow.Encrypt(password)

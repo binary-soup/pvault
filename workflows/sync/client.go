@@ -77,7 +77,7 @@ func (w ClientWorkflow) requestVaultItem(conn *sync.Connection, bytes []byte) er
 		return alert.ChainError(err, "error parsing vault item from vault list")
 	}
 
-	NAME_STYLE.Println(item.Name)
+	style.Highlight.Println(item.Name)
 
 	if !w.promptAcceptItem(item) {
 		errorLog.LogF("denied item %s", style.Bolded.Format(item.ID.String()))
