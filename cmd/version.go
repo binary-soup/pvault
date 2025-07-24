@@ -19,7 +19,7 @@ func NewVersionCommand() VersionCommand {
 }
 
 func (cmd VersionCommand) Run(args []string) error {
-	fmt.Printf("App:\t%s\n", style.Bolded.Format(version.APP))
-	fmt.Printf("Vault:\t%s\n", style.Bolded.FormatF("%d", version.VAULT))
+	fmt.Printf("App:\tv%s\n", style.Bolded.Format(version.APP))
+	fmt.Printf("Vault:\tv%s\n", style.Bolded.FormatF("%d", version.VAULT))
 	return nil
 }

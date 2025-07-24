@@ -27,7 +27,7 @@ chmod 755 $PACKAGE/DEBIAN/postinst
 
 ## build app
 echo "|> Building app (Architecture: ${ARCH})"
-GOOS=linux GOARCH=$ARCH go build -C .. -tags release -ldflags="-s -w" -o pvault_${VERSION}
+GOOS=linux GOARCH=$ARCH go build -C .. -tags prod -ldflags="-s -w" -o pvault_${VERSION}
 
 mkdir -p $PACKAGE/usr/local/bin
 mv ../pvault_${VERSION} $PACKAGE/usr/local/bin/pvault
