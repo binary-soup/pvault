@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"pvault/data/version"
 
 	"github.com/binary-soup/go-commando/command"
@@ -18,6 +19,7 @@ func NewVersionCommand() VersionCommand {
 }
 
 func (cmd VersionCommand) Run(args []string) error {
-	style.Bolded.PrintF("v%s\n", version.APP)
+	fmt.Printf("App:\t%s\n", style.Bolded.Format(version.APP))
+	fmt.Printf("Vault:\t%s\n", style.Bolded.FormatF("%d", version.VAULT))
 	return nil
 }

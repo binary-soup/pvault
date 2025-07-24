@@ -7,30 +7,35 @@ import (
 	"pvault/data"
 	"pvault/data/config"
 	"pvault/data/vault"
+	"pvault/data/version"
 
+	"github.com/binary-soup/go-commando/alert"
 	"github.com/binary-soup/go-commando/command"
-	commando_config "github.com/binary-soup/go-commando/config"
 	"github.com/binary-soup/go-commando/style"
 	"github.com/binary-soup/go-commando/util"
 )
 
 type InitCommand struct {
-	command.CommandBase
+	command.ConfigCommandBase[config.Config]
 }
 
 func NewInitCommand() InitCommand {
 	return InitCommand{
-		CommandBase: command.NewCommandBase("init", "initialize a new profile or upgrade an existing one"),
+		ConfigCommandBase: command.NewConfigCommandBase[config.Config]("init", "initialize a new vault or upgrade an existing one"),
 	}
 }
 
 func (cmd InitCommand) Run(args []string) error {
-	profile := cmd.Flags.String("prof", "main", "the config profile")
 	cmd.Flags.Parse(args)
 
-	path := commando_config.GetProfilePath(DATA_DIR, *profile)
+	if !cmd.UsingConfig() {
+		err := cmd.initProfile()
+		if err != nil {
+			return err
+		}
+	}
 
-	cfg, err := cmd.initProfile(*profile, path)
+	cfg, err := cmd.LoadConfig(DATA_DIR)
 	if err != nil {
 		return err
 	}
@@ -43,19 +48,21 @@ func (cmd InitCommand) Run(args []string) error {
 	return nil
 }
 
-func (cmd InitCommand) initProfile(profile, path string) (*config.Config, error) {
+func (cmd InitCommand) initProfile() error {
+	path := cmd.GetConfigPath(DATA_DIR)
+
 	ok, err := data.FileExists(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if ok {
-		fmt.Printf("Profile (up to date) [%s]\n", style.Info.Format(path))
-		return util.LoadJSON[config.Config]("profile config", path)
+		fmt.Printf("Using existing Profile %s [%s]\n", style.Bolded.Format(*cmd.Profile), style.Info.Format(path))
+		return nil
 	}
 
-	cfg := &config.Config{
+	cfg := config.Config{
 		Vault: &vault.Vault{
-			Path: filepath.Join(filepath.Dir(path), profile+".vault"),
+			Path: filepath.Join(filepath.Dir(path), *cmd.Profile+".vault"),
 		},
 		Passkey: config.PasskeyConfig{
 			Timeout: config.DEFAULT_PASSKEY_TIMEOUT,
@@ -66,13 +73,13 @@ func (cmd InitCommand) initProfile(profile, path string) (*config.Config, error)
 	}
 
 	os.MkdirAll(filepath.Dir(path), 0755)
-	err = util.SaveJSON("profile config", cfg, path)
+	err = util.SaveJSON("profile config", &cfg, path)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	fmt.Printf("Created new Profile [%s]\n", style.Create.Format(path))
+	fmt.Printf("Created new Profile %s [%s]\n", style.Bolded.Format(*cmd.Profile), style.Create.Format(path))
 
-	return cfg, nil
+	return nil
 }
 
 func (cmd InitCommand) initVault(v *vault.Vault) error {
@@ -83,12 +90,9 @@ func (cmd InitCommand) initVault(v *vault.Vault) error {
 
 	if !ok {
 		return cmd.createVault(v)
+	} else {
+		return cmd.upgradeVault(v)
 	}
-
-	//TODO: check version info and upgrade if needed.
-
-	fmt.Printf("Vault (up to date) [%s]\n", style.Info.Format(v.Path))
-	return nil
 }
 
 func (cmd InitCommand) createVault(v *vault.Vault) error {
@@ -97,6 +101,20 @@ func (cmd InitCommand) createVault(v *vault.Vault) error {
 		return err
 	}
 
-	fmt.Printf("Created new Vault [%s]\n", style.Create.Format(v.Path))
+	fmt.Printf("Created new Vault@%s [%s]\n", style.Bolded.FormatF("v%d", version.VAULT), style.Create.Format(v.Path))
+	return nil
+}
+
+func (cmd InitCommand) upgradeVault(v *vault.Vault) error {
+	ver, err := v.ReadVersion()
+	if err != nil {
+		return err
+	}
+
+	if ver == 0 || ver > version.VAULT {
+		return alert.ErrorF("unsupported vault version %d", ver)
+	}
+
+	fmt.Printf("Vault@%s (up to date) [%s]\n", style.Bolded.FormatF("v%d", ver), style.Info.Format(v.Path))
 	return nil
 }

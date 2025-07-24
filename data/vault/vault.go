@@ -18,7 +18,11 @@ func (v Vault) Create() error {
 		return alert.ChainError(err, "error creating vault directory")
 	}
 
-	//TODO: create version info
+	err = v.writeVersion()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
