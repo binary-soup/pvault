@@ -54,6 +54,14 @@ func (idx Index) HasID(id uuid.UUID) bool {
 	return ok
 }
 
+func (idx Index) GetName(id uuid.UUID) (string, error) {
+	name, ok := idx.uuidMap[id]
+	if !ok {
+		return "", alert.ErrorF("id \"%s\" not found", id.String())
+	}
+	return name, nil
+}
+
 func (idx Index) GetID(name string) (uuid.UUID, error) {
 	id, ok := idx.nameMap[name]
 	if !ok {

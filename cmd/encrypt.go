@@ -89,6 +89,8 @@ func (cmd EncryptCommandBase) Run(args []string) error {
 
 	cmd.promptNewName(cfg.Vault.Index, cache.Meta)
 
+	//TODO: verify old passkey if changed
+
 	err = tools.PromptPasskey(&cache.Meta.Passkey)
 	if err != nil {
 		return err

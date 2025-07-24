@@ -132,16 +132,25 @@ func (w ClientWorkflow) promptNewItem(item *VaultItem) bool {
 		style.Info.Println("(item added to filter)")
 		return false
 	}
+	// res == 0
 
 	for w.Vault.Index.HasName(item.Name) {
 		item.Name = tools.PromptString(false, fmt.Sprintf("%s Choose new %s:", style.Info.Format("(name in use)"), style.Bolded.Format("NAME")))
 	}
-
 	return true
 }
 
 func (w ClientWorkflow) promptUpdateItem(item *VaultItem) bool {
-	//TODO: implement modified time
-	style.Info.Println("(up to date)")
-	return false
+	var prompt string
+
+	localName, _ := w.Vault.Index.GetName(item.ID)
+	if item.Name != localName {
+		prompt = style.Info.FormatF("(item exists locally as %s)", style.Bolded.Format(localName))
+	} else {
+		prompt = style.Info.Format("(item exists locally)")
+	}
+	item.Name = localName
+
+	res := tools.PromptAccept(fmt.Sprintf("%s Overwrite [y/n]?", prompt), []byte("yn"))
+	return res == 0
 }
